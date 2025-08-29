@@ -4,13 +4,15 @@ import toast from 'react-hot-toast'
 
 export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [email, setEmail] = useState('')
+  const [userName, setUserName] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isRegister, setIsRegister] = useState(false)
 
   const lidarComEnvio = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) {
+    if (!email || !password || (isRegister && !userName)) {
       toast.error('Por favor, preencha todos os campos')
       return
     }
@@ -18,15 +20,20 @@ export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
     setLoading(true)
     
     try {
-      const response = await apiService.login(email, password)
+      let response
+      if (isRegister) {
+        response = await apiService.register({ userName, email, password })
+      } else {
+        response = await apiService.login(email, password)
+      }
       
       if (response.success) {
-        toast.success('Login realizado com sucesso!')
+        toast.success(isRegister ? 'Registro realizado com sucesso!' : 'Login realizado com sucesso!')
         aoEntrar() // libera o acesso ao usuário autenticado
       }
     } catch (error: any) {
-      console.error('Erro no login:', error)
-      toast.error(error.message || 'Erro ao fazer login')
+      console.error(isRegister ? 'Erro no registro:' : 'Erro no login:', error)
+      toast.error(error.message || (isRegister ? 'Erro ao fazer registro' : 'Erro ao fazer login'))
     } finally {
       setLoading(false)
     }
@@ -43,6 +50,24 @@ export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
         </div>
 
         <form className="p-8 space-y-6" onSubmit={lidarComEnvio}>
+          {isRegister && (
+            <div className="space-y-2">
+              <label htmlFor="userName" className="block text-gray-700 font-semibold">
+                Nome de usuário
+              </label>
+              <input
+                id="userName"
+                name="userName"
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Digite seu nome de usuário"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 placeholder-gray-400"
+                required={isRegister}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="email" className="block text-gray-700 font-semibold">
               E-mail
@@ -83,13 +108,22 @@ export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
             {loading ? (
               <>
                 <div className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Entrando...
+                {isRegister ? 'Registrando...' : 'Entrando...'}
               </>
             ) : (
-              'Continuar'
+              isRegister ? 'Registrar' : 'Continuar'
             )}
           </button>
         </form>
+
+        <div className="p-4 text-center">
+          <button
+            onClick={() => setIsRegister(!isRegister)}
+            className="text-red-600 hover:underline font-semibold"
+          >
+            {isRegister ? 'Já tem uma conta? Entrar' : 'Novo por aqui? Registrar'}
+          </button>
+        </div>
       </div>
     </div>
   )
