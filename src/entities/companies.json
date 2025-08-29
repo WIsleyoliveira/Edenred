@@ -1,0 +1,100 @@
+
+{
+  "name": "companies",
+  "options": {
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["cnpj", "razaoSocial", "status", "createdAt"],
+        "properties": {
+          "cnpj": {
+            "bsonType": "string",
+            "pattern": "^\\d{14}$",
+            "description": "CNPJ da empresa (14 dígitos)"
+          },
+          "razaoSocial": {
+            "bsonType": "string",
+            "minLength": 3,
+            "maxLength": 200,
+            "description": "Razão social da empresa"
+          },
+          "nomeFantasia": {
+            "bsonType": "string",
+            "maxLength": 150,
+            "description": "Nome fantasia da empresa"
+          },
+          "endereco": {
+            "bsonType": "object",
+            "properties": {
+              "logradouro": { "bsonType": "string" },
+              "numero": { "bsonType": "string" },
+              "complemento": { "bsonType": "string" },
+              "bairro": { "bsonType": "string" },
+              "cidade": { "bsonType": "string" },
+              "uf": { "bsonType": "string" },
+              "cep": { "bsonType": "string" }
+            }
+          },
+          "telefone": {
+            "bsonType": "string",
+            "description": "Telefone da empresa"
+          },
+          "email": {
+            "bsonType": "string",
+            "description": "Email da empresa"
+          },
+          "atividadePrincipal": {
+            "bsonType": "string",
+            "description": "Atividade principal da empresa"
+          },
+          "situacao": {
+            "bsonType": "string",
+            "enum": ["ATIVA", "BAIXADA", "SUSPENSA", "INAPTA"],
+            "description": "Situação cadastral"
+          },
+          "dataAbertura": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data de abertura da empresa"
+          },
+          "capitalSocial": {
+            "bsonType": "number",
+            "minimum": 0,
+            "description": "Capital social da empresa"
+          },
+          "porte": {
+            "bsonType": "string",
+            "enum": ["MEI", "ME", "EPP", "GRANDE"],
+            "description": "Porte da empresa"
+          },
+          "status": {
+            "bsonType": "string",
+            "enum": ["EM_NEGOCIACAO", "EM_PROCESSAMENTO", "FECHADO_GANHO", "FECHADO_PERDIDO"],
+            "description": "Status do processo"
+          },
+          "produto": {
+            "bsonType": "string",
+            "description": "Produto de interesse"
+          },
+          "observacoes": {
+            "bsonType": "string",
+            "description": "Observações sobre a empresa"
+          },
+          "createdAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data de criação do registro"
+          },
+          "updatedAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data de atualização"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validationLevel": "moderate",
+    "validationAction": "warn"
+  }
+}

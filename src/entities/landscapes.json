@@ -1,0 +1,99 @@
+
+{
+  "name": "landscapes",
+  "options": {
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["title", "imageUrl", "category", "location", "photographer", "createdAt"],
+        "properties": {
+          "title": {
+            "bsonType": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Título da paisagem"
+          },
+          "description": {
+            "bsonType": "string",
+            "maxLength": 500,
+            "description": "Descrição detalhada da paisagem"
+          },
+          "imageUrl": {
+            "bsonType": "string",
+            "description": "URL da imagem da paisagem"
+          },
+          "category": {
+            "bsonType": "string",
+            "enum": ["montanha", "praia", "floresta", "deserto", "lago", "cidade", "campo", "outro"],
+            "description": "Categoria da paisagem"
+          },
+          "location": {
+            "bsonType": "object",
+            "required": ["country", "region"],
+            "properties": {
+              "country": {
+                "bsonType": "string",
+                "description": "País onde foi tirada a foto"
+              },
+              "region": {
+                "bsonType": "string", 
+                "description": "Região ou estado"
+              },
+              "city": {
+                "bsonType": "string",
+                "description": "Cidade"
+              },
+              "coordinates": {
+                "bsonType": "object",
+                "properties": {
+                  "lat": { "bsonType": "number" },
+                  "lng": { "bsonType": "number" }
+                }
+              }
+            }
+          },
+          "photographer": {
+            "bsonType": "string",
+            "description": "Nome do fotógrafo"
+          },
+          "tags": {
+            "bsonType": "array",
+            "items": { "bsonType": "string" },
+            "description": "Tags relacionadas à paisagem"
+          },
+          "featured": {
+            "bsonType": "bool",
+            "description": "Se é uma paisagem em destaque"
+          },
+          "viewCount": {
+            "bsonType": "int",
+            "minimum": 0,
+            "description": "Número de visualizações"
+          },
+          "likes": {
+            "bsonType": "int", 
+            "minimum": 0,
+            "description": "Número de curtidas"
+          },
+          "creator": {
+            "bsonType": "string",
+            "description": "ID do usuário que criou"
+          },
+          "createdAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "bsonType": "string",
+            "title": "datetime", 
+            "description": "Data de atualização"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validationLevel": "moderate",
+    "validationAction": "warn"
+  }
+}

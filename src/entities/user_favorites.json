@@ -1,0 +1,35 @@
+
+{
+  "name": "user_favorites",
+  "options": {
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["userId", "landscapeId", "createdAt"],
+        "properties": {
+          "userId": {
+            "bsonType": "string",
+            "description": "ID do usuário"
+          },
+          "landscapeId": {
+            "bsonType": "string",
+            "description": "ID da paisagem favoritada"
+          },
+          "note": {
+            "bsonType": "string",
+            "maxLength": 200,
+            "description": "Nota pessoal sobre a paisagem"
+          },
+          "createdAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data que foi favoritada"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validationLevel": "moderate",
+    "validationAction": "warn"
+  }
+}

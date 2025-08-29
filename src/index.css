@@ -1,0 +1,339 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Cores Edenred França */
+  --edenred-rouge: #E31E24;
+  --edenred-rouge-dark: #C41E3A;
+  --edenred-rouge-light: #FF4757;
+  --edenred-blanc: #FFFFFF;
+  --edenred-gris-clair: #F8F9FA;
+  --edenred-gris: #E9ECEF;
+  --edenred-gris-fonce: #6C757D;
+  --edenred-noir: #212529;
+  
+  /* Ombres françaises */
+  --ombre-douce: 0 4px 20px rgba(227, 30, 36, 0.08);
+  --ombre-moyenne: 0 8px 30px rgba(227, 30, 36, 0.12);
+  --ombre-forte: 0 12px 40px rgba(227, 30, 36, 0.16);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+  color: var(--edenred-noir);
+  background-color: var(--edenred-gris-clair);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tipografia brasileira elegante */
+.titulo-principal {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--edenred-rouge);
+  text-shadow: 0 2px 4px rgba(227, 30, 36, 0.1);
+}
+
+.titulo-secundario {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--edenred-noir);
+}
+
+.texto-elegante {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--edenred-gris-fonce);
+}
+
+/* Botões Edenred */
+.botao-edenred-primario {
+  background: linear-gradient(135deg, var(--edenred-rouge) 0%, var(--edenred-rouge-dark) 100%);
+  color: var(--edenred-blanc);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--ombre-douce);
+  position: relative;
+  overflow: hidden;
+}
+
+.botao-edenred-primario:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ombre-forte);
+  background: linear-gradient(135deg, var(--edenred-rouge-dark) 0%, var(--edenred-rouge) 100%);
+}
+
+.botao-edenred-primario:active {
+  transform: translateY(0);
+}
+
+.botao-edenred-secundario {
+  background: var(--edenred-blanc);
+  color: var(--edenred-rouge);
+  border: 2px solid var(--edenred-rouge);
+  border-radius: 12px;
+  padding: 12px 26px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--ombre-douce);
+}
+
+.botao-edenred-secundario:hover {
+  background: var(--edenred-rouge);
+  color: var(--edenred-blanc);
+  transform: translateY(-1px);
+  box-shadow: var(--ombre-moyenne);
+}
+
+/* Cartões elegantes */
+.cartao-edenred {
+  background: var(--edenred-blanc);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--ombre-douce);
+  border: 1px solid rgba(227, 30, 36, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cartao-edenred:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ombre-forte);
+  border-color: rgba(227, 30, 36, 0.15);
+}
+
+.cartao-edenred::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--edenred-rouge) 0%, var(--edenred-rouge-light) 100%);
+}
+
+/* Navegação brasileira */
+.navegacao-edenred {
+  background: var(--edenred-blanc);
+  box-shadow: 0 2px 20px rgba(227, 30, 36, 0.06);
+  border-bottom: 1px solid rgba(227, 30, 36, 0.08);
+}
+
+.link-navegacao-edenred {
+  color: var(--edenred-gris-fonce);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.link-navegacao-edenred:hover,
+.link-navegacao-edenred.active {
+  color: var(--edenred-rouge);
+  background: rgba(227, 30, 36, 0.05);
+}
+
+.link-navegacao-edenred.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--edenred-rouge);
+  border-radius: 2px;
+}
+
+/* Formulários elegantes */
+.campo-edenred {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid var(--edenred-gris);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--edenred-noir);
+  background: var(--edenred-blanc);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.campo-edenred:focus {
+  border-color: var(--edenred-rouge);
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+  background: var(--edenred-blanc);
+}
+
+.campo-edenred::placeholder {
+  color: var(--edenred-gris-fonce);
+  font-weight: 400;
+}
+
+/* Badges e status */
+.badge-sucesso {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-em-andamento {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-erro {
+  background: linear-gradient(135deg, var(--edenred-rouge) 0%, var(--edenred-rouge-dark) 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Animações brasileiras */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animacao-entrada {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animacao-deslizamento {
+  animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsivo brasileiro */
+@media (max-width: 768px) {
+  .botao-edenred-primario,
+  .botao-edenred-secundario {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+  
+  .cartao-edenred {
+    padding: 20px;
+    margin: 16px;
+  }
+  
+  .titulo-principal {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--edenred-gris-clair);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--edenred-rouge) 0%, var(--edenred-rouge-dark) 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--edenred-rouge-dark);
+}
+
+/* Estados de carregamento */
+.carregamento-edenred {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(227, 30, 36, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--edenred-rouge);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Tooltips elegantes */
+.dica-edenred {
+  position: relative;
+  cursor: help;
+}
+
+.dica-edenred::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--edenred-noir);
+  color: var(--edenred-blanc);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.dica-edenred:hover::after {
+  opacity: 1;
+  visibility: visible;
+}

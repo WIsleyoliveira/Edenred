@@ -1,0 +1,67 @@
+
+{
+  "name": "consultations",
+  "options": {
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["cnpj", "userId", "step", "createdAt"],
+        "properties": {
+          "cnpj": {
+            "bsonType": "string",
+            "pattern": "^\\d{14}$",
+            "description": "CNPJ consultado"
+          },
+          "userId": {
+            "bsonType": "string",
+            "description": "ID do usuário que fez a consulta"
+          },
+          "userName": {
+            "bsonType": "string",
+            "description": "Nome do usuário"
+          },
+          "step": {
+            "bsonType": "int",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Etapa atual da consulta"
+          },
+          "completed": {
+            "bsonType": "bool",
+            "description": "Se a consulta foi completada"
+          },
+          "formData": {
+            "bsonType": "object",
+            "description": "Dados coletados no formulário"
+          },
+          "companyData": {
+            "bsonType": "object",
+            "description": "Dados da empresa encontrados"
+          },
+          "status": {
+            "bsonType": "string",
+            "enum": ["EM_ANDAMENTO", "CONCLUIDA", "CANCELADA"],
+            "description": "Status da consulta"
+          },
+          "observations": {
+            "bsonType": "string",
+            "description": "Observações da consulta"
+          },
+          "createdAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Data da consulta"
+          },
+          "updatedAt": {
+            "bsonType": "string",
+            "title": "datetime",
+            "description": "Última atualização"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "validationLevel": "moderate",
+    "validationAction": "warn"
+  }
+}
