@@ -2,25 +2,26 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Importar adaptadores
-import AdaptadorMongoDB from './adapters/mongodbAdapter.js';
 import AdaptadorFirebase from './adapters/firebaseAdapter.js';
+import AdaptadorHibrido from './adapters/memoryAdapter.js';
 
 class AdaptadorBancoDados {
   constructor() {
     this.adaptadorAtual = null;
-    this.tipoAdaptador = process.env.TIPO_BANCO_DADOS || 'mongodb';
+    this.tipoAdaptador = process.env.TIPO_BANCO_DADOS || 'firebase';
     
     this.inicializar();
   }
   
   inicializar() {
     switch (this.tipoAdaptador.toLowerCase()) {
-      case 'firebase':
-        this.adaptadorAtual = new AdaptadorFirebase();
+      case 'memory':
+      case 'memoria':
+        this.adaptadorAtual = new AdaptadorHibrido();
         break;
-      case 'mongodb':
+      case 'firebase':
       default:
-        this.adaptadorAtual = new AdaptadorMongoDB();
+        this.adaptadorAtual = new AdaptadorFirebase();
         break;
     }
     
