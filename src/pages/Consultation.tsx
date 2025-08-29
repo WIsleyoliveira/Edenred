@@ -198,24 +198,36 @@ const Consultation: React.FC = () => {
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Qual produto você vai indicar?
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Selecione o produto..."
+                  <select 
+                    value={formData.produto}
+                    onChange={(e) => handleInputChange('produto', e.target.value)}
                     className="campo-edenred"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Tipo de produto
-                  </label>
-                  <select className="campo-edenred">
-                    <option>Abast/Alimenta/Pay</option>
-                    <option>Fleet</option>
-                    <option>Ticket Restaurant</option>
-                    <option>Outras soluções</option>
+                  >
+                    <option value="">Selecione o produto...</option>
+                    <option value="FLEET">Fleet - Gestão de Frotas</option>
+                    <option value="TICKET_RESTAURANT">Ticket Restaurant - Alimentação</option>
+                    <option value="PAY">Pay - Pagamentos Digitais</option>
+                    <option value="ALIMENTA">Alimenta - Benefícios Alimentação</option>
+                    <option value="ABASTECIMENTO">Abastecimento - Combustíveis</option>
+                    <option value="OUTRAS">Outras Soluções</option>
                   </select>
                 </div>
+
+                {formData.produto && (
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                      🎯 Produto Selecionado: {formData.produto}
+                    </h4>
+                    <p className="text-sm text-blue-700">
+                      {formData.produto === 'FLEET' && 'Solução completa para gestão de frotas e veículos corporativos.'}
+                      {formData.produto === 'TICKET_RESTAURANT' && 'Benefícios de alimentação para colaboradores.'}
+                      {formData.produto === 'PAY' && 'Soluções digitais de pagamento para empresas.'}
+                      {formData.produto === 'ALIMENTA' && 'Benefícios de alimentação e refeição.'}
+                      {formData.produto === 'ABASTECIMENTO' && 'Cartões para abastecimento e combustíveis.'}
+                      {formData.produto === 'OUTRAS' && 'Outras soluções Edenred personalizadas.'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="text-center mt-8">

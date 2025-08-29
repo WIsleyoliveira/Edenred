@@ -61,14 +61,19 @@ app.use(helmet({
 // Configuração CORS
 const opcoesCors = {
   origin: function (origin, callback) {
-const allowedOrigins = process.env.ORIGENS_CORS_PERMITIDAS ? 
-      process.env.ORIGENS_CORS_PERMITIDAS.split(',') : 
-      ['http://localhost:3000', 'http://localhost:5173'];
-    
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Em desenvolvimento, permitir todas as origens localhost
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
       callback(null, true);
     } else {
-      callback(new Error('Não permitido pelo CORS'));
+      const allowedOrigins = process.env.ORIGENS_CORS_PERMITIDAS ? 
+        process.env.ORIGENS_CORS_PERMITIDAS.split(',') : 
+        ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Não permitido pelo CORS'));
+      }
     }
   },
   credentials: true,
