@@ -35,7 +35,7 @@ const app = express();
 const inicializarAplicacao = async () => {
   try {
     // Conectar ao banco de dados
-const adaptador = obterAdaptadorBanco();
+    const adaptador = obterAdaptadorBanco();
     await adaptador.conectar();
     console.log('✅ Banco de dados conectado com sucesso');
   } catch (error) {
@@ -113,7 +113,7 @@ app.get('/health', (req, res) => {
     message: 'Servidor funcionando normalmente',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-environment: process.env.AMBIENTE_EXECUCAO || 'desenvolvimento'
+    environment: process.env.AMBIENTE_EXECUCAO || 'desenvolvimento'
   });
 });
 
@@ -204,7 +204,7 @@ app.use((err, req, res, next) => {
     success: false,
     message: error.message || 'Erro interno do servidor',
     code: error.code || 'INTERNAL_SERVER_ERROR',
-...(process.env.AMBIENTE_EXECUCAO === 'desenvolvimento' && { stack: err.stack })
+    ...(process.env.AMBIENTE_EXECUCAO === 'desenvolvimento' && { stack: err.stack })
   });
 });
 
@@ -216,7 +216,7 @@ inicializarAplicacao();
 
 // Iniciar servidor
 const server = app.listen(PORT, () => {
-console.log(`\n🚀 Servidor rodando em modo ${process.env.AMBIENTE_EXECUCAO || 'desenvolvimento'}`);
+  console.log(`\n🚀 Servidor rodando em modo ${process.env.AMBIENTE_EXECUCAO || 'desenvolvimento'}`);
   console.log(`📡 URL: http://localhost:${PORT}`);
   console.log(`📊 Health Check: http://localhost:${PORT}/health`);
   console.log(`📚 API Docs: http://localhost:${PORT}/api/docs`);
