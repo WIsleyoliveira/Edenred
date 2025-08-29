@@ -1,16 +1,17 @@
 # CNPJ Consultation System - Backend API
 
-Backend completo para o sistema de consulta CNPJ com Node.js, Express e MongoDB.
+Backend completo para o sistema de consulta CNPJ com Node.js, Express e Firebase.
 
 Recursos
 
- ## pedi pro gpt fazer o readme, preguica, o mongo eu usei so pra ver se tava certo o fluxo do site, depois eu boto a firebase ou, a gente so conecta os dois 
+## Migração para Firebase
 
+O sistema foi migrado do MongoDB para Firebase Firestore para melhor integração e escalabilidade.
 
 ##  Pré-requisitos
 
 - Node.js 18+
-- MongoDB 4.4+
+- Projeto Firebase configurado
 - NPM ou Yarn
 
 ##  Instalação
@@ -30,23 +31,26 @@ npm install
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` com suas configurações:
+Edite o arquivo `.env` com suas configurações do Firebase:
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/cnpj_consultation
+FIREBASE_API_KEY=sua_api_key_firebase
+FIREBASE_AUTH_DOMAIN=seu_projeto.firebaseapp.com
+FIREBASE_PROJECT_ID=seu_projeto_firebase
+FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=123456789
+FIREBASE_APP_ID=sua_app_id_firebase
 JWT_SECRET=sua_chave_secreta_muito_forte_aqui_123456789
 JWT_EXPIRE=7d
 CORS_ORIGIN=http://localhost:5173,http://localhost:3000
 ```
 
-4. **Inicie o MongoDB**
-```bash
-# Se usando MongoDB local
-mongod
-
-# Ou use MongoDB Atlas (configure MONGODB_URI)
-```
+4. **Configure o Firebase**
+- Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
+- Ative o Firestore Database
+- Ative o Authentication
+- Configure as variáveis de ambiente com os dados do projeto
 
 5. **Execute o servidor**
 ```bash
@@ -171,18 +175,19 @@ GET /health
 - Diferentes níveis por ambiente
 - Rotação automática de logs
 
-##  Banco de Dados
+##  Firebase Firestore
 
-### Modelos
-- **User** - Usuários do sistema
-- **Company** - Empresas/CNPJs
-- **Consultation** - Histórico de consultas
-- **Landscape** - Galeria de imagens
+### Collections
+- **users** - Usuários do sistema
+- **companies** - Empresas/CNPJs
+- **consultations** - Histórico de consultas
+- **landscapes** - Galeria de imagens
 
-### Indexes
-- Otimização para queries frequentes
-- Indexes compostos para performance
-- Text search em campos relevantes
+### Vantagens do Firebase
+- Sincronização em tempo real
+- Escalabilidade automática
+- Integração nativa com autenticação
+- Queries otimizadas automaticamente
 
 ##  Configuração Avançada
 
@@ -192,8 +197,13 @@ GET /health
 PORT=5000
 NODE_ENV=development
 
-# Banco de Dados
-MONGODB_URI=mongodb://localhost:27017/cnpj_consultation
+# Firebase
+FIREBASE_API_KEY=sua_api_key_firebase
+FIREBASE_AUTH_DOMAIN=seu_projeto.firebaseapp.com
+FIREBASE_PROJECT_ID=seu_projeto_firebase
+FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=123456789
+FIREBASE_APP_ID=sua_app_id_firebase
 
 # JWT
 JWT_SECRET=chave_super_secreta

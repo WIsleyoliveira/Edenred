@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import bcryptjs from 'bcryptjs';
 dotenv.config();
 
 // Importar adaptadores
@@ -112,6 +113,26 @@ class AdaptadorBancoDados {
   // Verificação de saúde
   async verificarSaude() {
     return await this.adaptadorAtual.verificarSaude();
+  }
+
+  // Autenticar usuário: delega para o adaptador ou faz fallback local
+  async autenticarUsuario(email, password) {
+    if (this.adaptadorAtual && typeof this.adaptadorAtual.autenticarUsuario === 'function') {
+      return await this.adaptadorAtual.autenticarUsuario(email, password);
+    }
+
+    // Fallback: buscar usuário e comparar senha hash se disponível
+    const user = await this.buscarUsuarioPorEmail(email);
+    if (!user) return null;
+
+    if (user.password) {
+      const isValid = await bcryptjs.compare(password, user.password);
+      if (!isValid) return null;
+      const { password: pw, ...userSafe } = user;
+      return userSafe;
+    }
+
+    return null;
   }
 }
 

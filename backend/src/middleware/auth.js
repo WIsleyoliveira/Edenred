@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import { obterAdaptadorBanco } from '../config/dbAdapter.js';
 
 // Middleware para verificar token JWT
 export const authenticate = async (req, res, next) => {
@@ -23,8 +23,9 @@ export const authenticate = async (req, res, next) => {
       // Verificar e decodificar o token
       const decoded = jwt.verify(token, process.env.CHAVE_SECRETA_JWT || 'chave_secreta_padrao');
       
-      // Buscar o usuário no banco
-      const user = await User.findById(decoded.id).select('-password');
+  // Buscar o usuário no banco via adaptador
+  const db = obterAdaptadorBanco();
+  const user = await db.buscarUsuarioPorId(decoded.id);
       
       if (!user) {
         return res.status(401).json({
@@ -34,7 +35,7 @@ export const authenticate = async (req, res, next) => {
         });
       }
 
-      if (!user.isActive) {
+  if (!user || !user.isActive) {
         return res.status(401).json({
           success: false,
           message: 'Conta desativada. Entre em contato com o suporte.',
@@ -114,12 +115,13 @@ export const optionalAuth = async (req, res, next) => {
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret_key');
-        const user = await User.findById(decoded.id).select('-password');
-        
-        if (user && user.isActive) {
-          req.user = user;
-        }
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret_key');
+          const db = obterAdaptadorBanco();
+          const user = await db.buscarUsuarioPorId(decoded.id);
+
+          if (user && user.isActive) {
+            req.user = user;
+          }
       } catch (jwtError) {
         // Ignora erros de token para autenticação opcional
         console.log('Token opcional inválido:', jwtError.message);

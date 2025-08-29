@@ -9,18 +9,16 @@ O sistema foi completamente migrado do MongoDB para o Firebase, com as seguintes
 ### ✅ O que foi implementado
 
 1. **Adaptador Firebase completo** - Todos os métodos CRUD implementados
-2. **Remoção do MongoDB** - Dependências do mongoose removidas
-3. **Atualização do servidor** - Middlewares específicos do MongoDB removidos
+2. **Migração completa para Firebase** - Sistema 100% baseado em Firestore
+3. **Atualização do servidor** - Middlewares desnecesários removidos
 4. **Novo sistema de seed** - Script atualizado para Firebase
 5. **Configuração de ambiente** - Variáveis atualizadas para Firebase
 
 ### 📦 Dependências atualizadas
 
 **Removidas:**
-- `mongoose`
-- `express-mongo-sanitize` 
-- `xss-clean`
-- `hpp`
+- `mongoose` (não é mais necessário)
+- Dependências relacionadas ao MongoDB
 
 **Adicionadas:**
 - `firebase` (^10.7.1)

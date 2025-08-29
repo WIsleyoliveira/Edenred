@@ -5,6 +5,7 @@ import {
   addDoc, 
   doc, 
   getDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -33,16 +34,35 @@ class AdaptadorFirebase {
   
   async conectar() {
     try {
-      const firebaseConfig = {
-        apiKey: process.env.FIREBASE_API_KEY,
-        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.FIREBASE_APP_ID
-      };
-      
-      const app = initializeApp(firebaseConfig);
+  // Build Firebase config from environment and log a minimal debug snapshot.
+  const firebaseConfig = {
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID
+  };
+
+  // Minimal debug output (mask most of apiKey)
+  const apiKey = firebaseConfig.apiKey;
+  console.log('DEBUG Firebase config:', {
+    apiKeyPresent: !!apiKey,
+    apiKeyPreview: apiKey ? `*****${apiKey.slice(-4)}` : null,
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain
+  });
+
+  if (!apiKey) {
+    throw new Error('FIREBASE_API_KEY não encontrada. Verifique seu .env e o nome da variável (FIREBASE_API_KEY).');
+  }
+
+  // Quick heuristic: most Firebase client API keys start with 'AIza'. If not, warn.
+  if (typeof apiKey === 'string' && !apiKey.startsWith('AIza')) {
+    console.warn('AVISO: FIREBASE_API_KEY não parece ser uma API key cliente do Firebase (não começa com "AIza"). Se este for um backend/servidor, considere usar firebase-admin com uma service account.');
+  }
+
+  const app = initializeApp(firebaseConfig);
       this.db = getFirestore(app);
       this.auth = getAuth(app);
       
@@ -76,8 +96,9 @@ class AdaptadorFirebase {
       
       const user = userCredential.user;
       
-      // Salvar dados adicionais no Firestore
-      const userRef = await addDoc(collection(this.db, 'users'), {
+      // Salvar dados adicionais no Firestore usando o UID como ID do documento
+      const userDocRef = doc(this.db, 'users', user.uid);
+      await setDoc(userDocRef, {
         ...dadosUsuario,
         uid: user.uid,
         criadoEm: Timestamp.now(),
@@ -85,7 +106,7 @@ class AdaptadorFirebase {
       });
       
       return {
-        id: userRef.id,
+        id: user.uid,
         uid: user.uid,
         ...dadosUsuario,
         criadoEm: new Date(),
@@ -94,6 +115,57 @@ class AdaptadorFirebase {
     } catch (error) {
       console.error('❌ Erro ao criar usuário:', error);
       throw error;
+    }
+  }
+
+  // Autenticar usuário usando Firebase Auth
+  async autenticarUsuario(email, password) {
+    try {
+      // Tenta realizar sign in (retornará erro se credenciais inválidas)
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      const user = userCredential.user;
+
+      // Buscar dados adicionais no Firestore usando o UID do Firebase Auth
+      const userDoc = await getDoc(doc(this.db, 'users', user.uid));
+
+      if (userDoc.exists()) {
+        return {
+          id: user.uid,
+          uid: user.uid,
+          ...userDoc.data()
+        };
+      }
+
+      // Se não houver doc no Firestore, criar automaticamente para usuários existentes
+      console.log('🔧 Criando documento Firestore para usuário existente:', user.uid);
+      const userData = {
+        email: user.email,
+        name: user.displayName || 'Usuário',
+        role: 'user',
+        uid: user.uid,
+        isActive: true,
+        preferences: {
+          theme: 'light',
+          notifications: true
+        },
+        criadoEm: Timestamp.now(),
+        atualizadoEm: Timestamp.now()
+      };
+
+      // Criar documento no Firestore
+      await setDoc(doc(this.db, 'users', user.uid), userData);
+
+      return {
+        id: user.uid,
+        uid: user.uid,
+        ...userData,
+        criadoEm: new Date(),
+        atualizadoEm: new Date()
+      };
+    } catch (error) {
+      // Se credenciais inválidas, signInWithEmailAndPassword lançará erro — retornamos null para indicar falha de auth
+      console.error('❌ Erro ao autenticar usuário no Firebase:', error.message || error);
+      return null;
     }
   }
   

@@ -1,6 +1,5 @@
 // Adaptador híbrido - funciona com MongoDB ou em memória
 import bcryptjs from 'bcryptjs';
-import mongoose from 'mongoose';
 
 class AdaptadorHibrido {
   constructor() {

@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import { obterAdaptadorBanco } from '../config/dbAdapter.js';
 import { generateToken } from '../middleware/auth.js';
 
 // Registrar novo usuário
@@ -7,7 +7,8 @@ export const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     // Verificar se usuário já existe
-    const existingUser = await User.findOne({ email });
+    const db = obterAdaptadorBanco();
+    const existingUser = await db.buscarUsuarioPorEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -15,33 +16,29 @@ export const register = async (req, res) => {
         code: 'EMAIL_ALREADY_EXISTS'
       });
     }
-
-    // Criar novo usuário
-    const user = await User.create({
+    // Criar novo usuário via adaptador (Firebase)
+    const createdUser = await db.criarUsuario({
       name: name.trim(),
       email,
       password
     });
 
-    // Gerar token
-    const token = generateToken(user._id);
+    // Gerar token usando id retornado (adapter deve retornar id/uid)
+    const token = generateToken(createdUser.id || createdUser.uid);
 
-    // Atualizar último login
-    user.lastLogin = new Date();
-    await user.save();
-
+    // Responder
     res.status(201).json({
       success: true,
       message: 'Usuário registrado com sucesso',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatar: user.avatar,
-          preferences: user.preferences,
-          createdAt: user.createdAt
+          id: createdUser.id || createdUser.uid,
+          name: createdUser.name || name.trim(),
+          email: createdUser.email,
+          role: createdUser.role || 'user',
+          avatar: createdUser.avatar || null,
+          preferences: createdUser.preferences || {},
+          createdAt: createdUser.criadoEm || new Date()
         },
         token
       }
@@ -62,30 +59,11 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Buscar usuário com senha
-    const user = await User.findOne({ email }).select('+password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email ou senha incorretos',
-        code: 'INVALID_CREDENTIALS'
-      });
-    }
+    // Autenticar via adaptador
+    const db = obterAdaptadorBanco();
+    const authenticatedUser = await db.autenticarUsuario(email, password);
 
-    // Verificar se conta está ativa
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Conta desativada. Entre em contato com o suporte.',
-        code: 'ACCOUNT_DISABLED'
-      });
-    }
-
-    // Verificar senha
-    const isPasswordValid = await user.comparePassword(password);
-    
-    if (!isPasswordValid) {
+    if (!authenticatedUser) {
       return res.status(401).json({
         success: false,
         message: 'Email ou senha incorretos',
@@ -94,25 +72,29 @@ export const login = async (req, res) => {
     }
 
     // Gerar token
-    const token = generateToken(user._id);
+    const token = generateToken(authenticatedUser.id || authenticatedUser.uid);
 
-    // Atualizar último login
-    user.lastLogin = new Date();
-    await user.save();
+    // Atualizar último login (se adaptador suportar atualizar)
+    try {
+      await db.atualizarUsuario(authenticatedUser.id || authenticatedUser.uid, { lastLogin: new Date() });
+    } catch (err) {
+      // Ignora falhas de atualização de metadata
+      console.warn('Aviso: não foi possível atualizar lastLogin via adaptador:', err.message || err);
+    }
 
     res.status(200).json({
       success: true,
       message: 'Login realizado com sucesso',
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatar: user.avatar,
-          preferences: user.preferences,
-          lastLogin: user.lastLogin,
-          createdAt: user.createdAt
+          id: authenticatedUser.id || authenticatedUser.uid,
+          name: authenticatedUser.name || authenticatedUser.userName || null,
+          email: authenticatedUser.email,
+          role: authenticatedUser.role || 'user',
+          avatar: authenticatedUser.avatar || null,
+          preferences: authenticatedUser.preferences || {},
+          lastLogin: authenticatedUser.lastLogin || new Date(),
+          createdAt: authenticatedUser.criadoEm || authenticatedUser.createdAt || new Date()
         },
         token
       }
