@@ -147,3 +147,5 @@ export const obterAdaptadorBanco = () => {
 };
 
 export default AdaptadorBancoDados;
+
+// so pra enviar

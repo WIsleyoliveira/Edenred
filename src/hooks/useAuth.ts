@@ -23,3 +23,6 @@ export function useAuth() {
 
   return { usuario, estaAutenticado }
 }
+
+// so pra enviar
+// so pra enviar

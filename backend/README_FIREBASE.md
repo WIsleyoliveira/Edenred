@@ -131,3 +131,5 @@ Verifique se o Authentication está habilitado no Firebase.
 - [Firebase Console](https://console.firebase.google.com/)
 - [Documentação Firestore](https://firebase.google.com/docs/firestore)
 - [Documentação Firebase Auth](https://firebase.google.com/docs/auth)
+
+<!-- so pra enviar -->

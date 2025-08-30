@@ -154,3 +154,5 @@ export const decodeToken = (token) => {
     return null;
   }
 };
+
+// so pra enviar

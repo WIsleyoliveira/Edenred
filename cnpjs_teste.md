@@ -99,3 +99,5 @@ curl -X POST http://localhost:3001/api/consultations/cnpj \
 60.746.948/0001-12  - Bradesco (Banco)
 02.012.862/0001-91  - Petrobras (Grande empresa)
 ```
+
+<!-- so pra enviar -->

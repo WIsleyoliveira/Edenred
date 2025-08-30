@@ -124,3 +124,5 @@ Acesse `http://localhost:5000/health` para verificar se o servidor está funcion
 **Erro de conexão**: Verifique se as credenciais do Firebase estão corretas no arquivo `.env`.
 
 **Erro de autenticação**: Verifique se o Authentication está habilitado no console do Firebase.
+
+<!-- so pra enviar -->

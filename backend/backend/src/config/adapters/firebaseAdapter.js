@@ -582,3 +582,5 @@ export default AdaptadorFirebase;
 Apenas mude TIPO_BANCO_DADOS=firebase e configure as variáveis.
 Todo o resto do código continua funcionando igual!
 */
+
+// so pra enviar

@@ -1,4 +1,4 @@
-
+// so pra enviar
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, Search, BarChart3, Building2, Home, FileText } from 'lucide-react'
@@ -119,3 +119,5 @@ const BarraNavegacao: React.FC = () => {
 }
 
 export default BarraNavegacao
+
+// so pra enviar
