@@ -84,3 +84,5 @@ router.post('/image', uploadRateLimit, upload.single('image'), (req, res) => {
 });
 
 export default router;
+
+// so pra enviar

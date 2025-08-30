@@ -37,3 +37,5 @@ router.get('/stats', getConsultationStats);
 router.patch('/:id/favorite', validateObjectId('id'), toggleFavorite);
 
 export default router;
+
+// so pra enviar

@@ -3,9 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
-import hpp from 'hpp';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -31,6 +28,9 @@ import uploadRoutes from './routes/upload.js';
 
 const app = express();
 
+// Importar inicialização do sistema
+import { inicializarSistema } from './utils/initializeSystem.js';
+
 // Inicialização assíncrona
 const inicializarAplicacao = async () => {
   try {
@@ -38,8 +38,18 @@ const inicializarAplicacao = async () => {
     const adaptador = obterAdaptadorBanco();
     await adaptador.conectar();
     console.log('✅ Banco de dados conectado com sucesso');
+    
+    // Inicializar dados do sistema
+    const resultado = await inicializarSistema();
+    console.log('🎉 Sistema Edenred pronto para uso!');
+    console.log('\n🔑 Credenciais disponíveis:');
+    resultado.credenciais.forEach(cred => {
+      console.log(`   ${cred.tipo}: ${cred.email} / ${cred.senha}`);
+    });
+    console.log('');
+    
   } catch (error) {
-    console.error('Erro ao conectar database:', error);
+    console.error('Erro ao inicializar aplicação:', error);
     process.exit(1);
   }
 };
@@ -87,11 +97,6 @@ app.use(cors(opcoesCors));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(mongoSanitize());
-app.use(xss());
-app.use(hpp({
-  whitelist: ['tags', 'category', 'sort']
-}));
 
 // Logging
 if ((process.env.AMBIENTE_EXECUCAO || 'desenvolvimento') === 'desenvolvimento') {
@@ -159,37 +164,6 @@ app.use((err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  // Erro de validação do Mongoose
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message).join(', ');
-    return res.status(400).json({
-      success: false,
-      message: 'Erro de validação',
-      details: message,
-      code: 'VALIDATION_ERROR'
-    });
-  }
-
-  // Erro de chave duplicada (MongoDB)
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const value = err.keyValue[field];
-    return res.status(400).json({
-      success: false,
-      message: `${field} '${value}' já existe no sistema`,
-      code: 'DUPLICATE_FIELD'
-    });
-  }
-
-  // Erro de cast do Mongoose (ID inválido)
-  if (err.name === 'CastError') {
-    return res.status(400).json({
-      success: false,
-      message: 'ID inválido fornecido',
-      code: 'INVALID_ID'
-    });
-  }
-
   // Erro de limite de tamanho do payload
   if (err.type === 'entity.too.large') {
     return res.status(413).json({
@@ -248,3 +222,5 @@ process.on('unhandledRejection', (err, promise) => {
 });
 
 export default app;
+
+// so pra enviar

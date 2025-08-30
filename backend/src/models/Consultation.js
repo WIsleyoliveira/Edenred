@@ -1,150 +1,151 @@
-import mongoose from 'mongoose';
+import AdaptadorFirebase from '../config/adapters/firebaseAdapter.js';
 
-const consultationSchema = new mongoose.Schema({
-  cnpj: {
-    type: String,
-    required: [true, 'CNPJ é obrigatório'],
-    trim: true,
-    match: [/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX']
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  company: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company',
-    default: null
-  },
-  status: {
-    type: String,
-    enum: ['PENDING', 'SUCCESS', 'ERROR', 'NOT_FOUND'],
-    default: 'PENDING'
-  },
-  source: {
-    type: String,
-    enum: ['RECEITA_FEDERAL', 'CACHE', 'API_EXTERNA'],
-    default: 'RECEITA_FEDERAL'
-  },
-  responseTime: {
-    type: Number, // em millisegundos
-    min: 0
-  },
-  result: {
-    type: mongoose.Schema.Types.Mixed, // Armazena a resposta completa da API
-    default: null
-  },
-  error: {
-    message: { type: String },
-    code: { type: String },
-    details: { type: mongoose.Schema.Types.Mixed }
-  },
-  isFavorite: {
-    type: Boolean,
-    default: false
-  },
-  tags: [{
-    type: String,
-    trim: true,
-    lowercase: true
-  }],
-  notes: {
-    type: String,
-    maxlength: [500, 'Notas não podem ter mais de 500 caracteres']
-  },
-  metadata: {
-    userAgent: String,
-    ipAddress: String,
-    location: {
-      country: String,
-      city: String,
-      region: String
+// Validadores e utilitários para consultas
+class Consultation {
+  constructor() {
+    this.firebase = new AdaptadorFirebase();
+  }
+
+  // Validar formato do CNPJ
+  static validateCNPJ(cnpj) {
+    if (!cnpj) return false;
+    const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+    return cnpjRegex.test(cnpj);
+  }
+
+  // Validar dados da consulta
+  static validateConsultationData(data) {
+    const errors = [];
+
+    if (!data.cnpj) {
+      errors.push('CNPJ é obrigatório');
+    } else if (!Consultation.validateCNPJ(data.cnpj)) {
+      errors.push('CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX');
     }
+
+    if (!data.user) {
+      errors.push('ID do usuário é obrigatório');
+    }
+
+    if (data.status && !['PENDING', 'SUCCESS', 'ERROR', 'NOT_FOUND'].includes(data.status)) {
+      errors.push('Status deve ser: PENDING, SUCCESS, ERROR ou NOT_FOUND');
+    }
+
+    if (data.source && !['RECEITA_FEDERAL', 'CACHE', 'API_EXTERNA'].includes(data.source)) {
+      errors.push('Source deve ser: RECEITA_FEDERAL, CACHE ou API_EXTERNA');
+    }
+
+    if (data.responseTime && data.responseTime < 0) {
+      errors.push('Tempo de resposta não pode ser negativo');
+    }
+
+    if (data.notes && data.notes.length > 500) {
+      errors.push('Notas não podem ter mais de 500 caracteres');
+    }
+
+    return errors;
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
 
-// Indexes para melhor performance
-consultationSchema.index({ user: 1, createdAt: -1 });
-consultationSchema.index({ cnpj: 1 });
-consultationSchema.index({ status: 1 });
-consultationSchema.index({ createdAt: -1 });
-consultationSchema.index({ isFavorite: 1 });
-
-// Virtual para verificar se foi consultado recentemente
-consultationSchema.virtual('isRecent').get(function() {
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  return this.createdAt > oneHourAgo;
-});
-
-// Virtual para tempo decorrido desde a consulta
-consultationSchema.virtual('timeAgo').get(function() {
-  const now = new Date();
-  const diffInMs = now - this.createdAt;
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInDays > 0) {
-    return `${diffInDays} dia${diffInDays > 1 ? 's' : ''} atrás`;
-  } else if (diffInHours > 0) {
-    return `${diffInHours} hora${diffInHours > 1 ? 's' : ''} atrás`;
-  } else if (diffInMinutes > 0) {
-    return `${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''} atrás`;
-  } else {
-    return 'Agora mesmo';
-  }
-});
-
-// Método para marcar/desmarcar como favorito
-consultationSchema.methods.toggleFavorite = function() {
-  this.isFavorite = !this.isFavorite;
-  return this.save();
-};
-
-// Método para calcular tempo de resposta
-consultationSchema.methods.calculateResponseTime = function(startTime) {
-  this.responseTime = Date.now() - startTime;
-  return this.responseTime;
-};
-
-// Método estático para buscar consultas recentes do usuário
-consultationSchema.statics.findRecentByUser = function(userId, limit = 10) {
-  return this.find({ user: userId })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate('company', 'razaoSocial nomeFantasia situacao');
-};
-
-// Método estático para estatísticas do usuário
-consultationSchema.statics.getUserStats = async function(userId) {
-  const stats = await this.aggregate([
-    { $match: { user: new mongoose.Types.ObjectId(userId) } },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: 1 },
-        successful: { $sum: { $cond: [{ $eq: ['$status', 'SUCCESS'] }, 1, 0] } },
-        failed: { $sum: { $cond: [{ $eq: ['$status', 'ERROR'] }, 1, 0] } },
-        avgResponseTime: { $avg: '$responseTime' },
-        favorites: { $sum: { $cond: ['$isFavorite', 1, 0] } }
+  // Criar dados padrão para uma consulta
+  static createDefaultConsultationData(data) {
+    return {
+      cnpj: data.cnpj?.trim() || '',
+      user: data.user || '',
+      company: data.company || null,
+      status: data.status || 'PENDING',
+      source: data.source || 'RECEITA_FEDERAL',
+      responseTime: data.responseTime || 0,
+      result: data.result || null,
+      error: data.error || { message: '', code: '', details: null },
+      isFavorite: data.isFavorite || false,
+      tags: (data.tags || []).map(tag => tag.toLowerCase().trim()),
+      notes: data.notes?.trim() || '',
+      metadata: {
+        userAgent: data.metadata?.userAgent || '',
+        ipAddress: data.metadata?.ipAddress || '',
+        location: {
+          country: data.metadata?.location?.country || '',
+          city: data.metadata?.location?.city || '',
+          region: data.metadata?.location?.region || ''
+        }
       }
+    };
+  }
+
+  // Verificar se foi consultado recentemente
+  static isRecent(createdAt) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    return new Date(createdAt) > oneHourAgo;
+  }
+
+  // Calcular tempo decorrido
+  static getTimeAgo(createdAt) {
+    const now = new Date();
+    const diffInMs = now - new Date(createdAt);
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} dia${diffInDays > 1 ? 's' : ''} atrás`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hora${diffInHours > 1 ? 's' : ''} atrás`;
+    } else if (diffInMinutes > 0) {
+      return `${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''} atrás`;
+    } else {
+      return 'Agora mesmo';
     }
-  ]);
+  }
 
-  return stats[0] || {
-    total: 0,
-    successful: 0,
-    failed: 0,
-    avgResponseTime: 0,
-    favorites: 0
-  };
-};
+  // Alternar favorito
+  static async toggleFavorite(consultationId) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      const consultation = await firebase.buscarConsultaPorId(consultationId);
+      if (!consultation) {
+        throw new Error('Consulta não encontrada');
+      }
+      
+      return await firebase.atualizarConsulta(consultationId, {
+        isFavorite: !consultation.isFavorite
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 
-const Consultation = mongoose.model('Consultation', consultationSchema);
+  // Calcular tempo de resposta
+  static calculateResponseTime(startTime) {
+    return Date.now() - startTime;
+  }
+
+  // Buscar consultas recentes do usuário
+  static async findRecentByUser(userId, limit = 10) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      return await firebase.buscarConsultasPorUsuario(userId, { limit });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Estatísticas do usuário
+  static async getUserStats(userId) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      return await firebase.obterEstatisticasConsulta(userId);
+    } catch (error) {
+      throw error;
+    }
+  }
+}
 
 export default Consultation;
+
+// so pra enviar

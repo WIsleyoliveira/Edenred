@@ -1,26 +1,28 @@
 import dotenv from 'dotenv';
+import bcryptjs from 'bcryptjs';
 dotenv.config();
 
 // Importar adaptadores
-import AdaptadorMongoDB from './adapters/mongodbAdapter.js';
 import AdaptadorFirebase from './adapters/firebaseAdapter.js';
+import AdaptadorHibrido from './adapters/memoryAdapter.js';
 
 class AdaptadorBancoDados {
   constructor() {
     this.adaptadorAtual = null;
-    this.tipoAdaptador = process.env.TIPO_BANCO_DADOS || 'mongodb';
+    this.tipoAdaptador = process.env.TIPO_BANCO_DADOS || 'firebase';
     
     this.inicializar();
   }
   
   inicializar() {
     switch (this.tipoAdaptador.toLowerCase()) {
-      case 'firebase':
-        this.adaptadorAtual = new AdaptadorFirebase();
+      case 'memory':
+      case 'memoria':
+        this.adaptadorAtual = new AdaptadorHibrido();
         break;
-      case 'mongodb':
+      case 'firebase':
       default:
-        this.adaptadorAtual = new AdaptadorMongoDB();
+        this.adaptadorAtual = new AdaptadorFirebase();
         break;
     }
     
@@ -112,6 +114,26 @@ class AdaptadorBancoDados {
   async verificarSaude() {
     return await this.adaptadorAtual.verificarSaude();
   }
+
+  // Autenticar usuário: delega para o adaptador ou faz fallback local
+  async autenticarUsuario(email, password) {
+    if (this.adaptadorAtual && typeof this.adaptadorAtual.autenticarUsuario === 'function') {
+      return await this.adaptadorAtual.autenticarUsuario(email, password);
+    }
+
+    // Fallback: buscar usuário e comparar senha hash se disponível
+    const user = await this.buscarUsuarioPorEmail(email);
+    if (!user) return null;
+
+    if (user.password) {
+      const isValid = await bcryptjs.compare(password, user.password);
+      if (!isValid) return null;
+      const { password: pw, ...userSafe } = user;
+      return userSafe;
+    }
+
+    return null;
+  }
 }
 
 // Singleton para garantir uma única instância
@@ -125,3 +147,5 @@ export const obterAdaptadorBanco = () => {
 };
 
 export default AdaptadorBancoDados;
+
+// so pra enviar

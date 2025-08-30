@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, Search, Building2, CheckCircle, FileText, Users, MapPin, Phone, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Search, Building2, CheckCircle, FileText, Users, MapPin, Phone, BarChart3 } from 'lucide-react'
 import { apiService, type Company } from '../services/apiService'
 import toast from 'react-hot-toast'
 
@@ -331,21 +331,21 @@ const Consultation: React.FC = () => {
                   {companyData ? (
                     <>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 items-center">
                           <Building2 size={16} className="mr-2 text-red-600" />
                           RAZÃO SOCIAL
                         </label>
                         <p className="text-lg font-medium text-gray-900">{companyData.razaoSocial}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 items-center">
                           <MapPin size={16} className="mr-2 text-red-600" />
                           ENDEREÇO
                         </label>
                         <p className="text-sm text-gray-700">{formData.endereco}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 items-center">
                           <Phone size={16} className="mr-2 text-red-600" />
                           TELEFONE
                         </label>
@@ -806,3 +806,7 @@ const Consultation: React.FC = () => {
 }
 
 export default Consultation
+
+// so pra enviar
+
+// so pra enviar

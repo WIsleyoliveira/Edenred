@@ -129,3 +129,5 @@ backend/logs/
 # Database
 *.sqlite
 *.db
+
+# so pra enviar

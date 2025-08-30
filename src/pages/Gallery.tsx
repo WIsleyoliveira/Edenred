@@ -295,3 +295,5 @@ const Gallery: React.FC = () => {
 }
 
 export default Gallery
+
+// so pra enviar

@@ -283,3 +283,5 @@ export const cnpjRateLimit = createRateLimit(
   50, // 50 consultas
   'Limite de consultas CNPJ excedido. Tente novamente em 1 hora.'
 );
+
+// so pra enviar

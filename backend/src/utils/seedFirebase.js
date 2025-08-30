@@ -1,8 +1,6 @@
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Company from '../models/Company.js';
-import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
+import { obterAdaptadorBanco } from '../config/dbAdapter.js';
 
 // Configurar ambiente
 dotenv.config();
@@ -131,19 +129,20 @@ const companiesData = [
   }
 ];
 
-const seedDatabase = async () => {
+const seedFirebase = async () => {
   try {
-    // Conectar ao MongoDB
-    await mongoose.connect(process.env.URL_CONEXAO_MONGODB || 'mongodb://localhost:27017/sistema_consulta_cnpj');
-    console.log('✅ Conectado ao MongoDB para seed');
+    // Conectar ao Firebase
+    const adaptador = obterAdaptadorBanco();
+    await adaptador.conectar();
+    console.log('✅ Conectado ao Firebase para seed');
 
-    // Obter o usuário teste para associar às empresas
-    let user = await User.findOne({ email: 'teste@edenred.com' });
+    // Buscar usuário teste
+    let user = await adaptador.buscarUsuarioPorEmail('teste@edenred.com');
     
     if (!user) {
       // Criar usuário teste se não existir
       const hashedPassword = await bcrypt.hash('Test123456', 12);
-      user = await User.create({
+      user = await adaptador.criarUsuario({
         name: 'Usuario Teste',
         email: 'teste@edenred.com',
         password: hashedPassword,
@@ -156,41 +155,50 @@ const seedDatabase = async () => {
       console.log('✅ Usuário teste criado');
     }
 
-    // Limpar empresas existentes
-    await Company.deleteMany({});
-    console.log('🗑️ Empresas existentes removidas');
+    console.log('📋 Verificando empresas existentes...');
+    // Verificar se as empresas já existem para evitar duplicação
+    const empresasExistentes = await adaptador.buscarEmpresasPorUsuario(user.id);
+    const cnpjsExistentes = new Set(empresasExistentes.map(e => e.cnpj));
 
     // Adicionar empresas de exemplo
+    console.log('📝 Adicionando empresas de exemplo...');
     for (const companyData of companiesData) {
-      await Company.create({
+      if (cnpjsExistentes.has(companyData.cnpj)) {
+        console.log(`⚠️ Empresa com CNPJ ${companyData.cnpj} já existe, pulando...`);
+        continue;
+      }
+      await adaptador.criarEmpresa({
         ...companyData,
-        addedBy: user._id
+        adicionadoPor: user.id
       });
     }
 
     console.log(`✅ ${companiesData.length} empresas de exemplo adicionadas`);
-    console.log('🎉 Seed do banco de dados concluído com sucesso!');
+    console.log('🎉 Seed do Firebase concluído com sucesso!');
 
     // Listar empresas criadas
-    const companies = await Company.find().select('cnpj razaoSocial situacao');
+    const empresas = await adaptador.buscarEmpresasPorUsuario(user.id);
     console.log('\n📋 Empresas criadas:');
-    companies.forEach(company => {
-      console.log(`  - ${company.cnpj} | ${company.razaoSocial} | ${company.situacao}`);
+    empresas.forEach(empresa => {
+      console.log(`  - ${empresa.cnpj} | ${empresa.razaoSocial} | ${empresa.situacao}`);
     });
 
   } catch (error) {
-    console.error('❌ Erro no seed:', error);
+    console.error('❌ Erro no seed do Firebase:', error);
   } finally {
-    // Desconectar do banco
-    await mongoose.disconnect();
-    console.log('\n✅ Desconectado do MongoDB');
+    // Desconectar
+    const adaptador = obterAdaptadorBanco();
+    await adaptador.desconectar();
+    console.log('\n✅ Desconectado do Firebase');
     process.exit(0);
   }
 };
 
 // Executar seed se chamado diretamente
-if (process.argv[1].endsWith('seedDatabase.js')) {
-  seedDatabase();
+if (process.argv[1].endsWith('seedFirebase.js')) {
+  seedFirebase();
 }
 
-export default seedDatabase;
+export default seedFirebase;
+
+// so pra enviar

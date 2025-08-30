@@ -1,228 +1,266 @@
-import mongoose from 'mongoose';
+import AdaptadorFirebase from '../config/adapters/firebaseAdapter.js';
 
-const landscapeSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Título é obrigatório'],
-    trim: true,
-    maxlength: [200, 'Título não pode ter mais de 200 caracteres']
-  },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Descrição não pode ter mais de 1000 caracteres']
-  },
-  imageUrl: {
-    type: String,
-    required: [true, 'URL da imagem é obrigatória']
-  },
-  imagePublicId: {
-    type: String, // Para cloudinary ou similar
-    default: null
-  },
-  thumbnailUrl: {
-    type: String,
-    default: null
-  },
-  location: {
-    name: {
-      type: String,
-      trim: true
-    },
-    coordinates: {
-      latitude: {
-        type: Number,
-        min: [-90, 'Latitude deve estar entre -90 e 90'],
-        max: [90, 'Latitude deve estar entre -90 e 90']
-      },
-      longitude: {
-        type: Number,
-        min: [-180, 'Longitude deve estar entre -180 e 180'],
-        max: [180, 'Longitude deve estar entre -180 e 180']
+// Validadores e utilitários para paisagens
+class Landscape {
+  constructor() {
+    this.firebase = new AdaptadorFirebase();
+  }
+
+  // Validar dados da paisagem
+  static validateLandscapeData(data) {
+    const errors = [];
+
+    if (!data.title) {
+      errors.push('Título é obrigatório');
+    } else if (data.title.length > 200) {
+      errors.push('Título não pode ter mais de 200 caracteres');
+    }
+
+    if (data.description && data.description.length > 1000) {
+      errors.push('Descrição não pode ter mais de 1000 caracteres');
+    }
+
+    if (!data.imageUrl) {
+      errors.push('URL da imagem é obrigatória');
+    }
+
+    if (data.location?.coordinates?.latitude) {
+      if (data.location.coordinates.latitude < -90 || data.location.coordinates.latitude > 90) {
+        errors.push('Latitude deve estar entre -90 e 90');
       }
-    },
-    country: {
-      type: String,
-      trim: true,
-      default: 'Brasil'
-    },
-    state: {
-      type: String,
-      trim: true
-    },
-    city: {
-      type: String,
-      trim: true
     }
-  },
-  metadata: {
-    fileSize: {
-      type: Number,
-      min: 0
-    },
-    dimensions: {
-      width: { type: Number, min: 0 },
-      height: { type: Number, min: 0 }
-    },
-    format: {
-      type: String,
-      enum: ['jpeg', 'jpg', 'png', 'webp', 'gif'],
-      lowercase: true
-    },
-    exif: {
-      camera: String,
-      lens: String,
-      iso: Number,
-      aperture: String,
-      shutterSpeed: String,
-      focalLength: String,
-      dateTaken: Date
+
+    if (data.location?.coordinates?.longitude) {
+      if (data.location.coordinates.longitude < -180 || data.location.coordinates.longitude > 180) {
+        errors.push('Longitude deve estar entre -180 e 180');
+      }
     }
-  },
-  tags: [{
-    type: String,
-    trim: true,
-    lowercase: true
-  }],
-  category: {
-    type: String,
-    enum: ['landscape', 'urban', 'nature', 'architecture', 'portrait', 'abstract', 'other'],
-    default: 'landscape'
-  },
-  isPublic: {
-    type: Boolean,
-    default: true
-  },
-  isFeatured: {
-    type: Boolean,
-    default: false
-  },
-  uploadedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  likes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    likedAt: {
-      type: Date,
-      default: Date.now
+
+    if (data.metadata?.fileSize && data.metadata.fileSize < 0) {
+      errors.push('Tamanho do arquivo não pode ser negativo');
     }
-  }],
-  comments: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    text: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: [500, 'Comentário não pode ter mais de 500 caracteres']
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
+
+    if (data.metadata?.dimensions?.width && data.metadata.dimensions.width < 0) {
+      errors.push('Largura não pode ser negativa');
     }
-  }],
-  views: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  status: {
-    type: String,
-    enum: ['active', 'inactive', 'pending', 'rejected'],
-    default: 'active'
+
+    if (data.metadata?.dimensions?.height && data.metadata.dimensions.height < 0) {
+      errors.push('Altura não pode ser negativa');
+    }
+
+    if (data.metadata?.format && !['jpeg', 'jpg', 'png', 'webp', 'gif'].includes(data.metadata.format.toLowerCase())) {
+      errors.push('Formato deve ser: jpeg, jpg, png, webp ou gif');
+    }
+
+    if (data.category && !['landscape', 'urban', 'nature', 'architecture', 'portrait', 'abstract', 'other'].includes(data.category)) {
+      errors.push('Categoria deve ser: landscape, urban, nature, architecture, portrait, abstract ou other');
+    }
+
+    if (data.status && !['active', 'inactive', 'pending', 'rejected'].includes(data.status)) {
+      errors.push('Status deve ser: active, inactive, pending ou rejected');
+    }
+
+    if (!data.uploadedBy) {
+      errors.push('ID do usuário que fez o upload é obrigatório');
+    }
+
+    if (data.views && data.views < 0) {
+      errors.push('Número de visualizações não pode ser negativo');
+    }
+
+    return errors;
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
 
-// Indexes para melhor performance
-landscapeSchema.index({ title: 'text', description: 'text', tags: 'text' });
-landscapeSchema.index({ uploadedBy: 1, createdAt: -1 });
-landscapeSchema.index({ category: 1 });
-landscapeSchema.index({ isPublic: 1, status: 1 });
-landscapeSchema.index({ isFeatured: 1 });
-landscapeSchema.index({ 'location.coordinates.latitude': 1, 'location.coordinates.longitude': 1 });
-landscapeSchema.index({ tags: 1 });
-
-// Virtuals
-landscapeSchema.virtual('likesCount').get(function() {
-  return this.likes ? this.likes.length : 0;
-});
-
-landscapeSchema.virtual('commentsCount').get(function() {
-  return this.comments ? this.comments.length : 0;
-});
-
-landscapeSchema.virtual('isRecentUpload').get(function() {
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  return this.createdAt > oneWeekAgo;
-});
-
-// Métodos de instância
-landscapeSchema.methods.addLike = function(userId) {
-  const existingLike = this.likes.find(like => like.user.toString() === userId.toString());
-  
-  if (existingLike) {
-    // Remove like se já existe
-    this.likes = this.likes.filter(like => like.user.toString() !== userId.toString());
-    return { action: 'removed', count: this.likes.length };
-  } else {
-    // Adiciona like
-    this.likes.push({ user: userId });
-    return { action: 'added', count: this.likes.length };
+  // Criar dados padrão para uma paisagem
+  static createDefaultLandscapeData(data) {
+    return {
+      title: data.title?.trim() || '',
+      description: data.description?.trim() || '',
+      imageUrl: data.imageUrl || '',
+      imagePublicId: data.imagePublicId || null,
+      thumbnailUrl: data.thumbnailUrl || null,
+      location: {
+        name: data.location?.name?.trim() || '',
+        coordinates: {
+          latitude: data.location?.coordinates?.latitude || null,
+          longitude: data.location?.coordinates?.longitude || null
+        },
+        country: data.location?.country?.trim() || 'Brasil',
+        state: data.location?.state?.trim() || '',
+        city: data.location?.city?.trim() || ''
+      },
+      metadata: {
+        fileSize: data.metadata?.fileSize || 0,
+        dimensions: {
+          width: data.metadata?.dimensions?.width || 0,
+          height: data.metadata?.dimensions?.height || 0
+        },
+        format: data.metadata?.format?.toLowerCase() || '',
+        exif: {
+          camera: data.metadata?.exif?.camera || '',
+          lens: data.metadata?.exif?.lens || '',
+          iso: data.metadata?.exif?.iso || null,
+          aperture: data.metadata?.exif?.aperture || '',
+          shutterSpeed: data.metadata?.exif?.shutterSpeed || '',
+          focalLength: data.metadata?.exif?.focalLength || '',
+          dateTaken: data.metadata?.exif?.dateTaken || null
+        }
+      },
+      tags: (data.tags || []).map(tag => tag.toLowerCase().trim()),
+      category: data.category || 'landscape',
+      isPublic: data.isPublic !== undefined ? data.isPublic : true,
+      isFeatured: data.isFeatured || false,
+      uploadedBy: data.uploadedBy,
+      likes: data.likes || [],
+      comments: data.comments || [],
+      views: data.views || 0,
+      status: data.status || 'active'
+    };
   }
-};
 
-landscapeSchema.methods.addComment = function(userId, text) {
-  this.comments.push({ user: userId, text });
-  return this.comments[this.comments.length - 1];
-};
+  // Contar likes
+  static getLikesCount(likes) {
+    return likes ? likes.length : 0;
+  }
 
-landscapeSchema.methods.incrementView = function() {
-  this.views += 1;
-  return this.save();
-};
+  // Contar comentários
+  static getCommentsCount(comments) {
+    return comments ? comments.length : 0;
+  }
 
-// Métodos estáticos
-landscapeSchema.statics.findPopular = function(limit = 10) {
-  return this.find({ isPublic: true, status: 'active' })
-    .sort({ views: -1, likes: -1 })
-    .limit(limit)
-    .populate('uploadedBy', 'name avatar');
-};
+  // Verificar se é upload recente
+  static isRecentUpload(createdAt) {
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return new Date(createdAt) > oneWeekAgo;
+  }
 
-landscapeSchema.statics.findFeatured = function(limit = 5) {
-  return this.find({ isPublic: true, status: 'active', isFeatured: true })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .populate('uploadedBy', 'name avatar');
-};
+  // Adicionar/remover like
+  static async addLike(landscapeId, userId) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      const landscape = await firebase.buscarPaisagemPorId(landscapeId);
+      if (!landscape) {
+        throw new Error('Paisagem não encontrada');
+      }
 
-landscapeSchema.statics.findByLocation = function(latitude, longitude, radiusInKm = 10) {
-  return this.find({
-    isPublic: true,
-    status: 'active',
-    'location.coordinates.latitude': {
-      $gte: latitude - (radiusInKm / 111.32),
-      $lte: latitude + (radiusInKm / 111.32)
-    },
-    'location.coordinates.longitude': {
-      $gte: longitude - (radiusInKm / (111.32 * Math.cos(latitude * Math.PI / 180))),
-      $lte: longitude + (radiusInKm / (111.32 * Math.cos(latitude * Math.PI / 180)))
+      const likes = landscape.likes || [];
+      const existingLike = likes.find(like => like.user === userId);
+      
+      let updatedLikes;
+      let action;
+
+      if (existingLike) {
+        // Remove like se já existe
+        updatedLikes = likes.filter(like => like.user !== userId);
+        action = 'removed';
+      } else {
+        // Adiciona like
+        updatedLikes = [...likes, { user: userId, likedAt: new Date() }];
+        action = 'added';
+      }
+
+      await firebase.atualizarPaisagem(landscapeId, { likes: updatedLikes });
+      
+      return { action, count: updatedLikes.length };
+    } catch (error) {
+      throw error;
     }
-  });
-};
+  }
 
-const Landscape = mongoose.model('Landscape', landscapeSchema);
+  // Adicionar comentário
+  static async addComment(landscapeId, userId, text) {
+    if (!text || text.trim().length === 0) {
+      throw new Error('Texto do comentário é obrigatório');
+    }
+    if (text.length > 500) {
+      throw new Error('Comentário não pode ter mais de 500 caracteres');
+    }
+
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      const landscape = await firebase.buscarPaisagemPorId(landscapeId);
+      if (!landscape) {
+        throw new Error('Paisagem não encontrada');
+      }
+
+      const comments = landscape.comments || [];
+      const newComment = {
+        user: userId,
+        text: text.trim(),
+        createdAt: new Date()
+      };
+
+      const updatedComments = [...comments, newComment];
+      await firebase.atualizarPaisagem(landscapeId, { comments: updatedComments });
+      
+      return newComment;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Incrementar visualizações
+  static async incrementView(landscapeId) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      const landscape = await firebase.buscarPaisagemPorId(landscapeId);
+      if (!landscape) {
+        throw new Error('Paisagem não encontrada');
+      }
+
+      const newViews = (landscape.views || 0) + 1;
+      return await firebase.atualizarPaisagem(landscapeId, { views: newViews });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Buscar paisagens populares
+  static async findPopular(limit = 10) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      return await firebase.buscarPaisagens({ limit });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Buscar paisagens em destaque
+  static async findFeatured(limit = 5) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      // Implementação seria necessária no adaptador Firebase para filtrar por featured
+      return await firebase.buscarPaisagens({ limit });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Buscar paisagens por localização
+  static async findByLocation(latitude, longitude, radiusInKm = 10) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      // Implementação seria necessária no adaptador Firebase para busca geográfica
+      // Por enquanto, retorna todas as paisagens
+      return await firebase.buscarPaisagens({});
+    } catch (error) {
+      throw error;
+    }
+  }
+}
 
 export default Landscape;
+
+// so pra enviar

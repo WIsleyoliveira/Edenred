@@ -1,98 +1,103 @@
-import mongoose from 'mongoose';
+import AdaptadorFirebase from '../config/adapters/firebaseAdapter.js';
 import bcryptjs from 'bcryptjs';
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Nome é obrigatório'],
-    trim: true,
-    maxlength: [100, 'Nome não pode ter mais de 100 caracteres']
-  },
-  email: {
-    type: String,
-    required: [true, 'Email é obrigatório'],
-    unique: true,
-    lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
-  },
-  password: {
-    type: String,
-    required: [true, 'Senha é obrigatória'],
-    minlength: [6, 'Senha deve ter pelo menos 6 caracteres'],
-    select: false
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  avatar: {
-    type: String,
-    default: null
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  lastLogin: {
-    type: Date,
-    default: null
-  },
-  preferences: {
-    theme: {
-      type: String,
-      enum: ['light', 'dark'],
-      default: 'light'
-    },
-    notifications: {
-      type: Boolean,
-      default: true
+// Validadores e utilitários para usuários
+class User {
+  constructor() {
+    this.firebase = new AdaptadorFirebase();
+  }
+
+  // Validar formato do email
+  static validateEmail(email) {
+    if (!email) return false;
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    return emailRegex.test(email);
+  }
+
+  // Validar dados do usuário
+  static validateUserData(data) {
+    const errors = [];
+
+    if (!data.name) {
+      errors.push('Nome é obrigatório');
+    } else if (data.name.length > 100) {
+      errors.push('Nome não pode ter mais de 100 caracteres');
+    }
+
+    if (!data.email) {
+      errors.push('Email é obrigatório');
+    } else if (!User.validateEmail(data.email)) {
+      errors.push('Email inválido');
+    }
+
+    if (!data.password) {
+      errors.push('Senha é obrigatória');
+    } else if (data.password.length < 6) {
+      errors.push('Senha deve ter pelo menos 6 caracteres');
+    }
+
+    if (data.role && !['user', 'admin'].includes(data.role)) {
+      errors.push('Role deve ser: user ou admin');
+    }
+
+    if (data.preferences?.theme && !['light', 'dark'].includes(data.preferences.theme)) {
+      errors.push('Theme deve ser: light ou dark');
+    }
+
+    return errors;
+  }
+
+  // Criar dados padrão para um usuário
+  static createDefaultUserData(data) {
+    return {
+      name: data.name?.trim() || '',
+      email: data.email?.toLowerCase().trim() || '',
+      password: data.password || '',
+      role: data.role || 'user',
+      avatar: data.avatar || null,
+      isActive: data.isActive !== undefined ? data.isActive : true,
+      lastLogin: data.lastLogin || null,
+      preferences: {
+        theme: data.preferences?.theme || 'light',
+        notifications: data.preferences?.notifications !== undefined ? data.preferences.notifications : true
+      }
+    };
+  }
+
+  // Hash da senha
+  static async hashPassword(password) {
+    const saltRounds = parseInt(process.env.ROUNDS_CRIPTOGRAFIA_SENHA) || 12;
+    return await bcryptjs.hash(password, saltRounds);
+  }
+
+  // Comparar senhas
+  static async comparePassword(candidatePassword, hashedPassword) {
+    return await bcryptjs.compare(candidatePassword, hashedPassword);
+  }
+
+  // Remover campos sensíveis
+  static sanitizeUser(userData) {
+    const sanitized = { ...userData };
+    delete sanitized.password;
+    delete sanitized.__v;
+    return sanitized;
+  }
+
+  // Atualizar último login
+  static async updateLastLogin(userId) {
+    const firebase = new AdaptadorFirebase();
+    await firebase.conectar();
+    
+    try {
+      return await firebase.atualizarUsuario(userId, {
+        lastLogin: new Date()
+      });
+    } catch (error) {
+      throw error;
     }
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-// Index para melhor performance
-userSchema.index({ email: 1 });
-userSchema.index({ createdAt: -1 });
-
-// Middleware para hash da senha antes de salvar
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  try {
-const saltRounds = parseInt(process.env.ROUNDS_CRIPTOGRAFIA_SENHA) || 12;
-    this.password = await bcryptjs.hash(this.password, saltRounds);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Método para comparar senhas
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcryptjs.compare(candidatePassword, this.password);
-};
-
-// Método para remover campos sensíveis
-userSchema.methods.toJSON = function() {
-  const userObject = this.toObject();
-  delete userObject.password;
-  delete userObject.__v;
-  return userObject;
-};
-
-// Virtual para contagem de consultas
-userSchema.virtual('consultationCount', {
-  ref: 'Consultation',
-  localField: '_id',
-  foreignField: 'user',
-  count: true
-});
-
-const User = mongoose.model('User', userSchema);
+}
 
 export default User;
+
+// so pra enviar

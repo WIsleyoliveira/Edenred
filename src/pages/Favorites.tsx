@@ -296,3 +296,5 @@ const Favorites: React.FC = () => {
 }
 
 export default Favorites
+
+// so pra enviar

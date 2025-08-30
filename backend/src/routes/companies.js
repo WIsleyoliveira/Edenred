@@ -53,3 +53,5 @@ router.get('/', validatePagination, validateSearch, async (req, res) => {
 });
 
 export default router;
+
+// so pra enviar
