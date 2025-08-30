@@ -554,5 +554,3 @@ class AdaptadorFirebase {
 }
 
 export default AdaptadorFirebase;
-
-// so pra enviar

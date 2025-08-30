@@ -278,5 +278,3 @@ export default {
   consultCNPJBrasilAPI,
   consultCNPJWithFallback
 };
-
-// so pra enviar

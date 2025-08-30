@@ -98,5 +98,3 @@ router.delete('/account',
 );
 
 export default router;
-
-// so pra enviar

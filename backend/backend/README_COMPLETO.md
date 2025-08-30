@@ -278,5 +278,3 @@ npm run dev
 
 **Desenvolvido por NOVOCODIGO**
 
-<!-- so pra enviar -->
-

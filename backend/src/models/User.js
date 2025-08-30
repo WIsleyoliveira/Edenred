@@ -99,5 +99,3 @@ class User {
 }
 
 export default User;
-
-// so pra enviar

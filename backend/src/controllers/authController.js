@@ -294,5 +294,3 @@ export const deleteAccount = async (req, res) => {
     });
   }
 };
-
-// so pra enviar
