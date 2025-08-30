@@ -454,5 +454,3 @@ const LandscapeDetail: React.FC = () => {
 }
 
 export default LandscapeDetail
-
-// so pra enviar

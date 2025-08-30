@@ -77,5 +77,3 @@ router.get('/my', authenticate, validatePagination, async (req, res) => {
 });
 
 export default router;
-
-// so pra enviar

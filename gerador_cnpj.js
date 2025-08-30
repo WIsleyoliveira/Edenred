@@ -66,5 +66,3 @@ console.log('🎯 Para teste com dados reais, use:');
 console.log('   00.000.000/0001-91 - Banco do Brasil');
 console.log('   47.960.950/0001-21 - Magazine Luiza');
 console.log('   60.746.948/0001-12 - Bradesco');
-
-// so pra enviar

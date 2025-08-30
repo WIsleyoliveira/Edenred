@@ -96,5 +96,3 @@ export const inicializarSistema = async () => {
 };
 
 export default inicializarSistema;
-
-// so pra enviar

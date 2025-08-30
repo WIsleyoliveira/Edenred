@@ -351,5 +351,3 @@ const Inicio: React.FC = () => {
 }
 
 export default Inicio
-
-// so pra enviar

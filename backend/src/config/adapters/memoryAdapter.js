@@ -248,5 +248,3 @@ class AdaptadorHibrido {
 }
 
 export default AdaptadorHibrido;
-
-// so pra enviar

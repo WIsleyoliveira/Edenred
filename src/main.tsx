@@ -10,5 +10,3 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-
-// so pra enviar

@@ -329,5 +329,3 @@ class ApiService {
 // Exportar instância única
 export const apiService = new ApiService();
 export default apiService;
-
-// so pra enviar

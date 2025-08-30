@@ -10,5 +10,3 @@ export default {
   },
   plugins: [],
 }
-
-// so pra enviar

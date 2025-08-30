@@ -147,5 +147,3 @@ class Consultation {
 }
 
 export default Consultation;
-
-// so pra enviar

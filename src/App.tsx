@@ -89,5 +89,3 @@ function App() {
 }
 
 export default App
-
-// so pra enviar

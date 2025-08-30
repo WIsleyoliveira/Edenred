@@ -68,5 +68,3 @@ echo ""
 
 # Aguardar indefinidamente
 wait
-
-# so pra enviar

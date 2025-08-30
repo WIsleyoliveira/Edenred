@@ -262,5 +262,3 @@ class Landscape {
 }
 
 export default Landscape;
-
-// so pra enviar

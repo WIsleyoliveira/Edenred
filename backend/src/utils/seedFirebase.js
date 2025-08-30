@@ -200,5 +200,3 @@ if (process.argv[1].endsWith('seedFirebase.js')) {
 }
 
 export default seedFirebase;
-
-// so pra enviar

@@ -28,5 +28,3 @@ export default tseslint.config(
   },
 )
 
-// so pra enviar
-

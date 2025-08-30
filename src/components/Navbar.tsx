@@ -119,5 +119,3 @@ const BarraNavegacao: React.FC = () => {
 }
 
 export default BarraNavegacao
-
-// so pra enviar

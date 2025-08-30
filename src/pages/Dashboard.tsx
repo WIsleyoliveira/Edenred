@@ -378,5 +378,3 @@ const Dashboard: React.FC = () => {
 }
 
 export default Dashboard
-
-// so pra enviar
