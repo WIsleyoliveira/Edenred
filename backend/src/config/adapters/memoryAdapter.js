@@ -57,13 +57,26 @@ class AdaptadorHibrido {
 
   // MÉTODOS DE USUÁRIO
   async criarUsuario(userData) {
+    // Gerar ID único baseado no timestamp e número de usuários
+    const id = Date.now().toString() + String(this.users.length + 1).padStart(3, '0');
+    
     const newUser = {
-      id: String(this.users.length + 1),
-      ...userData,
+      id: id,
+      _id: id,
+      uid: id, // Para compatibilidade com Firebase
+      name: userData.name || userData.userName,
+      userName: userData.userName || userData.name,
+      email: userData.email,
       password: await bcryptjs.hash(userData.password, 10),
+      role: userData.role || 'user',
       isActive: true,
-      createdAt: new Date()
+      avatar: null,
+      preferences: {},
+      permissions: ['read'],
+      createdAt: new Date(),
+      criadoEm: new Date() // Para compatibilidade
     };
+    
     this.users.push(newUser);
     const { password, ...userWithoutPassword } = newUser;
     return userWithoutPassword;

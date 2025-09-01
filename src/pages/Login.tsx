@@ -8,6 +8,17 @@ export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [isRegister, setIsRegister] = useState(false)
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
+  
+  // Verificar requisitos da senha
+  const passwordRequirements = {
+    minLength: password.length >= 6,
+    hasLowercase: /[a-z]/.test(password),
+    hasUppercase: /[A-Z]/.test(password),
+    hasNumber: /\d/.test(password)
+  }
+  
+  const isPasswordValid = Object.values(passwordRequirements).every(req => req)
 
   const lidarComEnvio = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,10 +105,70 @@ export default function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => isRegister && setShowPasswordRequirements(true)}
+              onBlur={() => setTimeout(() => setShowPasswordRequirements(false), 200)}
               placeholder="Digite sua senha"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:ring-4 focus:ring-red-100 focus:border-red-500 placeholder-gray-400"
               required
             />
+            
+            {/* Indicador de requisitos da senha */}
+            {isRegister && showPasswordRequirements && (
+              <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">Requisitos da senha:</p>
+                <div className="space-y-1">
+                  <div className={`flex items-center space-x-2 text-xs ${
+                    passwordRequirements.minLength ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      passwordRequirements.minLength ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      {passwordRequirements.minLength ? '✓' : '○'}
+                    </span>
+                    <span>Mínimo 6 caracteres</span>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-2 text-xs ${
+                    passwordRequirements.hasLowercase ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      passwordRequirements.hasLowercase ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      {passwordRequirements.hasLowercase ? '✓' : '○'}
+                    </span>
+                    <span>Uma letra minúscula</span>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-2 text-xs ${
+                    passwordRequirements.hasUppercase ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      passwordRequirements.hasUppercase ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      {passwordRequirements.hasUppercase ? '✓' : '○'}
+                    </span>
+                    <span>Uma letra maiúscula</span>
+                  </div>
+                  
+                  <div className={`flex items-center space-x-2 text-xs ${
+                    passwordRequirements.hasNumber ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                      passwordRequirements.hasNumber ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      {passwordRequirements.hasNumber ? '✓' : '○'}
+                    </span>
+                    <span>Um número</span>
+                  </div>
+                </div>
+                
+                {isPasswordValid && (
+                  <div className="mt-2 text-xs text-green-600 font-medium">
+                    ✓ Senha válida!
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <button

@@ -368,21 +368,58 @@ class AdaptadorFirebase {
   
   async buscarConsultasPorUsuario(idUsuario, filtros = {}) {
     try {
-      let q = query(collection(this.db, 'consultations'), where('usuario', '==', idUsuario));
-      
-      if (filtros.limit) {
-        q = query(q, orderBy('criadoEm', 'desc'), filtros.limit);
-      } else {
-        q = query(q, orderBy('criadoEm', 'desc'));
-      }
+      let q = query(collection(this.db, 'consultations'), where('user', '==', idUsuario));
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      let results = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        criadoEm: doc.data().criadoEm?.toDate?.() || doc.data().criadoEm,
+        atualizadoEm: doc.data().atualizadoEm?.toDate?.() || doc.data().atualizadoEm
       }));
+      
+      // Aplicar filtros manualmente
+      if (filtros.status) {
+        results = results.filter(doc => doc.status === filtros.status);
+      }
+      
+      if (filtros.favorite) {
+        results = results.filter(doc => doc.isFavorite === true);
+      }
+      
+      // Ordenar por data de criação (mais recentes primeiro)
+      results.sort((a, b) => {
+        const dateA = a.criadoEm instanceof Date ? a.criadoEm : new Date(a.criadoEm);
+        const dateB = b.criadoEm instanceof Date ? b.criadoEm : new Date(b.criadoEm);
+        return dateB - dateA;
+      });
+      
+      // Aplicar limite se especificado
+      if (filtros.limit) {
+        results = results.slice(0, filtros.limit);
+      }
+      
+      return results;
     } catch (error) {
-      console.error('❌ Erro ao buscar consultas por usuário:', error);
+      console.error('❤️ Erro ao buscar consultas por usuário:', error);
+      throw error;
+    }
+  }
+  
+  async buscarConsultaPorId(id) {
+    try {
+      const consultaDoc = await getDoc(doc(this.db, 'consultations', id));
+      if (consultaDoc.exists()) {
+        return {
+          id: consultaDoc.id,
+          ...consultaDoc.data(),
+          criadoEm: consultaDoc.data().criadoEm?.toDate?.() || consultaDoc.data().criadoEm,
+          atualizadoEm: consultaDoc.data().atualizadoEm?.toDate?.() || consultaDoc.data().atualizadoEm
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('❤️ Erro ao buscar consulta por ID:', error);
       throw error;
     }
   }
@@ -398,36 +435,43 @@ class AdaptadorFirebase {
       const updatedDoc = await getDoc(consultaRef);
       return {
         id: updatedDoc.id,
-        ...updatedDoc.data()
+        ...updatedDoc.data(),
+        criadoEm: updatedDoc.data().criadoEm?.toDate?.() || updatedDoc.data().criadoEm,
+        atualizadoEm: updatedDoc.data().atualizadoEm?.toDate?.() || updatedDoc.data().atualizadoEm
       };
     } catch (error) {
-      console.error('❌ Erro ao atualizar consulta:', error);
+      console.error('❤️ Erro ao atualizar consulta:', error);
       throw error;
     }
   }
   
   async obterEstatisticasConsulta(idUsuario) {
     try {
-      const q = query(collection(this.db, 'consultations'), where('usuario', '==', idUsuario));
+      const q = query(collection(this.db, 'consultations'), where('user', '==', idUsuario));
       const querySnapshot = await getDocs(q);
       
       const totalConsultas = querySnapshot.size;
-      const consultasComResultado = querySnapshot.docs.filter(doc => 
-        doc.data().resultado && doc.data().resultado.status === 'success'
+      const consultasComSucesso = querySnapshot.docs.filter(doc => 
+        doc.data().status === 'SUCCESS'
       ).length;
       
       const consultasComErro = querySnapshot.docs.filter(doc => 
-        doc.data().resultado && doc.data().resultado.status === 'error'
+        doc.data().status === 'ERROR'
+      ).length;
+      
+      const consultasPendentes = querySnapshot.docs.filter(doc => 
+        doc.data().status === 'PENDING'
       ).length;
       
       return {
         total: totalConsultas,
-        sucesso: consultasComResultado,
+        sucesso: consultasComSucesso,
         erro: consultasComErro,
-        taxaSucesso: totalConsultas > 0 ? (consultasComResultado / totalConsultas) * 100 : 0
+        pendentes: consultasPendentes,
+        taxaSucesso: totalConsultas > 0 ? (consultasComSucesso / totalConsultas) * 100 : 0
       };
     } catch (error) {
-      console.error('❌ Erro ao obter estatísticas:', error);
+      console.error('❤️ Erro ao obter estatísticas:', error);
       throw error;
     }
   }

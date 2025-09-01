@@ -1,9 +1,9 @@
-import AdaptadorFirebase from '../config/adapters/firebaseAdapter.js';
+import { obterAdaptadorBanco } from '../config/dbAdapter.js';
 
 // Validadores e utilitários para consultas
 class Consultation {
   constructor() {
-    this.firebase = new AdaptadorFirebase();
+    // Modelo não instancia o adaptador diretamente, usa métodos estáticos
   }
 
   // Validar formato do CNPJ
@@ -99,16 +99,16 @@ class Consultation {
 
   // Alternar favorito
   static async toggleFavorite(consultationId) {
-    const firebase = new AdaptadorFirebase();
-    await firebase.conectar();
+    const db = obterAdaptadorBanco();
+    await db.conectar();
     
     try {
-      const consultation = await firebase.buscarConsultaPorId(consultationId);
+      const consultation = await db.buscarConsultaPorId(consultationId);
       if (!consultation) {
         throw new Error('Consulta não encontrada');
       }
       
-      return await firebase.atualizarConsulta(consultationId, {
+      return await db.atualizarConsulta(consultationId, {
         isFavorite: !consultation.isFavorite
       });
     } catch (error) {
@@ -123,11 +123,11 @@ class Consultation {
 
   // Buscar consultas recentes do usuário
   static async findRecentByUser(userId, limit = 10) {
-    const firebase = new AdaptadorFirebase();
-    await firebase.conectar();
+    const db = obterAdaptadorBanco();
+    await db.conectar();
     
     try {
-      return await firebase.buscarConsultasPorUsuario(userId, { limit });
+      return await db.buscarConsultasPorUsuario(userId, { limit });
     } catch (error) {
       throw error;
     }
@@ -135,11 +135,11 @@ class Consultation {
 
   // Estatísticas do usuário
   static async getUserStats(userId) {
-    const firebase = new AdaptadorFirebase();
-    await firebase.conectar();
+    const db = obterAdaptadorBanco();
+    await db.conectar();
     
     try {
-      return await firebase.obterEstatisticasConsulta(userId);
+      return await db.obterEstatisticasConsulta(userId);
     } catch (error) {
       throw error;
     }

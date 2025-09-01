@@ -21,13 +21,25 @@ export const authenticate = async (req, res, next) => {
 
     try {
       // Verificar e decodificar o token
-      const decoded = jwt.verify(token, process.env.CHAVE_SECRETA_JWT || 'chave_secreta_padrao');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'chave_secreta_padrao');
       
   // Buscar o usuário no banco via adaptador
+  console.log('\n🔐 === AUTENTICAÇÃO ===');
+  console.log('📋 Token decoded:', { id: decoded.id, exp: new Date(decoded.exp * 1000) });
+  
   const db = obterAdaptadorBanco();
+  await db.conectar();
   const user = await db.buscarUsuarioPorId(decoded.id);
+  
+  console.log('👤 Usuário encontrado:', user ? {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    isActive: user.isActive
+  } : 'null');
       
       if (!user) {
+        console.log('❌ Usuário não encontrado no banco');
         return res.status(401).json({
           success: false,
           message: 'Token inválido. Usuário não encontrado.',
@@ -35,13 +47,24 @@ export const authenticate = async (req, res, next) => {
         });
       }
 
-  if (!user || !user.isActive) {
+      // Verificar se o usuário está ativo (mais permissivo)
+      if (user.isActive === false) {
+        console.log('❌ Conta desativada explicitamente');
         return res.status(401).json({
           success: false,
           message: 'Conta desativada. Entre em contato com o suporte.',
           code: 'ACCOUNT_DISABLED'
         });
       }
+      
+      // Se isActive não existe ou é undefined/null, assumir como ativo
+      if (user.isActive === undefined || user.isActive === null) {
+        console.log('⚠️ Campo isActive indefinido, assumindo usuário ativo');
+        user.isActive = true;
+      }
+      
+      console.log('✅ Usuário autenticado com sucesso');
+      console.log('=========================\n');
 
       // Adicionar usuário ao request
       req.user = user;
@@ -139,9 +162,9 @@ export const optionalAuth = async (req, res, next) => {
 export const generateToken = (userId) => {
   return jwt.sign(
     { id: userId },
-    process.env.CHAVE_SECRETA_JWT || 'chave_secreta_padrao',
+    process.env.JWT_SECRET || 'chave_secreta_padrao',
     {
-      expiresIn: process.env.TEMPO_EXPIRACAO_JWT || '7d'
+      expiresIn: process.env.JWT_EXPIRE || '7d'
     }
   );
 };

@@ -25,12 +25,20 @@ export const handleValidationErrors = (req, res, next) => {
 
 // Validações para usuário
 export const validateUserRegistration = [
-  body('name')
+  body(['name', 'userName'])
+    .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage('Nome deve ter entre 2 e 100 caracteres')
     .matches(/^[a-zA-ZÀ-ÿ\s]+$/)
     .withMessage('Nome deve conter apenas letras e espaços'),
+    
+  body().custom((value, { req }) => {
+    if (!req.body.name && !req.body.userName) {
+      throw new Error('Nome ou userName é obrigatório');
+    }
+    return true;
+  }),
     
   body('email')
     .isEmail()
@@ -40,17 +48,7 @@ export const validateUserRegistration = [
     
   body('password')
     .isLength({ min: 6, max: 128 })
-    .withMessage('Senha deve ter entre 6 e 128 caracteres')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Senha deve conter pelo menos uma letra minúscula, maiúscula e um número'),
-    
-  body('confirmPassword')
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Confirmação de senha não confere');
-      }
-      return true;
-    }),
+    .withMessage('Senha deve ter entre 6 e 128 caracteres'),
 
   handleValidationErrors
 ];
@@ -98,16 +96,26 @@ export const validateUserUpdate = [
 // Validações para CNPJ
 export const validateCNPJ = [
   body('cnpj')
-    .matches(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/)
-    .withMessage('CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX')
     .custom((value) => {
-      // Validação básica de CNPJ (sem verificação de dígitos verificadores)
-      const cnpj = value.replace(/[^\d]/g, '');
-      if (cnpj.length !== 14) {
-        throw new Error('CNPJ deve ter 14 dígitos');
+      if (!value) {
+        throw new Error('CNPJ é obrigatório');
       }
+      
+      // Aceitar tanto formato XX.XXX.XXX/XXXX-XX quanto apenas números
+      const cnpjNumbers = value.replace(/[^\d]/g, '');
+      
+      if (cnpjNumbers.length !== 14) {
+        throw new Error('CNPJ deve ter exatamente 14 dígitos');
+      }
+      
+      // Verificar se não são todos os dígitos iguais
+      if (/^(\d)\1+$/.test(cnpjNumbers)) {
+        throw new Error('CNPJ inválido');
+      }
+      
       return true;
-    }),
+    })
+    .withMessage('CNPJ deve ter 14 dígitos ou estar no formato XX.XXX.XXX/XXXX-XX'),
 
   handleValidationErrors
 ];

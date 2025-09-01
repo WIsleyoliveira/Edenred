@@ -1,11 +1,29 @@
 // so pra enviar
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Search, BarChart3, Building2, Home, FileText } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, X, Search, BarChart3, Building2, Home, FileText, LogOut, User } from 'lucide-react'
+import { apiService } from '../services/apiService'
+import toast from 'react-hot-toast'
 
 const BarraNavegacao: React.FC = () => {
   const [estaAberto, setEstaAberto] = useState(false)
+  const [menuUsuario, setMenuUsuario] = useState(false)
   const localizacao = useLocation()
+  const navigate = useNavigate()
+  
+  const usuario = apiService.getCurrentUser()
+  
+  const fazerLogout = async () => {
+    try {
+      await apiService.logout()
+      toast.success('Logout realizado com sucesso!')
+      // Força recarregamento da página para limpar o estado
+      window.location.href = '/'
+    } catch (error) {
+      toast.error('Erro ao fazer logout')
+      console.error('Erro no logout:', error)
+    }
+  }
 
   const navegacao = [
     { nome: 'Início', href: '/', icone: Home },
@@ -57,7 +75,7 @@ const BarraNavegacao: React.FC = () => {
             })}
           </div>
 
-          {/* Botão CTA */}
+          {/* Menu Usuário Desktop */}
           <div className="hidden lg:flex items-center space-x-4">
             <Link
               to="/consultation"
@@ -66,6 +84,33 @@ const BarraNavegacao: React.FC = () => {
               <Search size={16} className="mr-2" />
               Nova Consulta
             </Link>
+            
+            {/* Dropdown do Usuário */}
+            <div className="relative">
+              <button
+                onClick={() => setMenuUsuario(!menuUsuario)}
+                className="flex items-center space-x-2 p-2 rounded-lg text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <User size={20} />
+                <span className="text-sm font-medium">{usuario?.name || usuario?.userName || 'Usuário'}</span>
+              </button>
+              
+              {menuUsuario && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{usuario?.name || usuario?.userName}</p>
+                    <p className="text-xs text-gray-500">{usuario?.email}</p>
+                  </div>
+                  <button
+                    onClick={fazerLogout}
+                    className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span>Sair</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Menu Mobile */}
@@ -101,7 +146,7 @@ const BarraNavegacao: React.FC = () => {
               )
             })}
             
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100 space-y-2">
               <Link
                 to="/consultation"
                 onClick={() => setEstaAberto(false)}
@@ -110,6 +155,25 @@ const BarraNavegacao: React.FC = () => {
                 <Search size={16} className="mr-2" />
                 Nova Consulta
               </Link>
+              
+              {/* Informações do Usuário Mobile */}
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-600">
+                  <User size={20} />
+                  <div>
+                    <p className="font-medium text-gray-900">{usuario?.name || usuario?.userName}</p>
+                    <p className="text-xs text-gray-500">{usuario?.email}</p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={fazerLogout}
+                  className="flex items-center space-x-3 w-full px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors rounded-lg"
+                >
+                  <LogOut size={20} />
+                  <span className="font-medium">Sair</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

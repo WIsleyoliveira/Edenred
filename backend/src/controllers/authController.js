@@ -4,7 +4,8 @@ import { generateToken } from '../middleware/auth.js';
 // Registrar novo usuário
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, userName, email, password } = req.body;
+    const displayName = name || userName;
 
     // Verificar se usuário já existe
     const db = obterAdaptadorBanco();
@@ -18,7 +19,8 @@ export const register = async (req, res) => {
     }
     // Criar novo usuário via adaptador (Firebase)
     const createdUser = await db.criarUsuario({
-      name: name.trim(),
+      name: displayName.trim(),
+      userName: displayName.trim(),
       email,
       password
     });
@@ -30,18 +32,18 @@ export const register = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Usuário registrado com sucesso',
-      data: {
-        user: {
-          id: createdUser.id || createdUser.uid,
-          name: createdUser.name || name.trim(),
-          email: createdUser.email,
-          role: createdUser.role || 'user',
-          avatar: createdUser.avatar || null,
-          preferences: createdUser.preferences || {},
-          createdAt: createdUser.criadoEm || new Date()
-        },
-        token
-      }
+      user: {
+        _id: createdUser.id || createdUser.uid,
+        id: createdUser.id || createdUser.uid,
+        name: createdUser.name || displayName.trim(),
+        userName: createdUser.userName || displayName.trim(),
+        email: createdUser.email,
+        role: createdUser.role || 'user',
+        avatar: createdUser.avatar || null,
+        preferences: createdUser.preferences || {},
+        createdAt: createdUser.criadoEm || new Date()
+      },
+      token
     });
 
   } catch (error) {
@@ -85,19 +87,19 @@ export const login = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Login realizado com sucesso',
-      data: {
-        user: {
-          id: authenticatedUser.id || authenticatedUser.uid,
-          name: authenticatedUser.name || authenticatedUser.userName || null,
-          email: authenticatedUser.email,
-          role: authenticatedUser.role || 'user',
-          avatar: authenticatedUser.avatar || null,
-          preferences: authenticatedUser.preferences || {},
-          lastLogin: authenticatedUser.lastLogin || new Date(),
-          createdAt: authenticatedUser.criadoEm || authenticatedUser.createdAt || new Date()
-        },
-        token
-      }
+      user: {
+        _id: authenticatedUser.id || authenticatedUser.uid,
+        id: authenticatedUser.id || authenticatedUser.uid,
+        name: authenticatedUser.name || authenticatedUser.userName || null,
+        userName: authenticatedUser.userName || authenticatedUser.name || null,
+        email: authenticatedUser.email,
+        role: authenticatedUser.role || 'user',
+        avatar: authenticatedUser.avatar || null,
+        preferences: authenticatedUser.preferences || {},
+        lastLogin: authenticatedUser.lastLogin || new Date(),
+        createdAt: authenticatedUser.criadoEm || authenticatedUser.createdAt || new Date()
+      },
+      token
     });
 
   } catch (error) {

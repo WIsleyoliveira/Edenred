@@ -124,18 +124,23 @@ const url = `${process.env.URL_BASE_RECEITA_WS || 'https://www.receitaws.com.br/
     console.error('Erro na consulta ReceitaWS:', error);
     
     if (error.response?.status === 429) {
-      throw new Error('Limite de consultas excedido. Tente novamente mais tarde.');
+      throw new Error('Limite de consultas excedido na ReceitaWS. Tentando API alternativa...');
     }
     
     if (error.response?.status === 404) {
       throw new Error('CNPJ não encontrado na Receita Federal.');
     }
     
-    if (error.code === 'ECONNABORTED') {
-      throw new Error('Timeout na consulta. Tente novamente.');
+    if (error.response?.status === 403 || error.message.includes('Conta desativada')) {
+      throw new Error('Conta ReceitaWS desativada. Tentando API alternativa...');
     }
     
-    throw new Error(error.message || 'Erro na consulta do CNPJ');
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Timeout na consulta ReceitaWS.');
+    }
+    
+    // Para outros erros, lançar com contexto da API
+    throw new Error(`ReceitaWS: ${error.response?.data?.message || error.message || 'Erro na consulta do CNPJ'}`);
   }
 };
 
@@ -203,7 +208,77 @@ export const consultCNPJBrasilAPI = async (cnpj) => {
     
   } catch (error) {
     console.error('Erro na consulta BrasilAPI:', error);
-    throw error;
+    throw new Error(`BrasilAPI: ${error.response?.data?.message || error.message || 'Erro na consulta do CNPJ'}`);
+  }
+};
+
+// API alternativa 2 (CNPJ.WS) - Gratuita
+export const consultCNPJWS = async (cnpj) => {
+  try {
+    const cleanedCNPJ = cleanCNPJ(cnpj);
+    
+    if (!validateCNPJ(cleanedCNPJ)) {
+      throw new Error('CNPJ inválido');
+    }
+    
+    const url = `https://publica.cnpj.ws/cnpj/${cleanedCNPJ}`;
+    
+    const response = await axios.get(url, {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'CNPJ-Consultation-System/1.0.0'
+      }
+    });
+    
+    // Mapear resposta para nosso formato
+    const companyData = {
+      cnpj: formatCNPJ(response.data.estabelecimento.cnpj),
+      razaoSocial: response.data.razao_social,
+      nomeFantasia: response.data.estabelecimento.nome_fantasia || response.data.razao_social,
+      situacao: mapSituacao(response.data.estabelecimento.situacao_cadastral),
+      dataAbertura: parseDate(response.data.estabelecimento.data_inicio_atividade),
+      capitalSocial: parseFloat(response.data.capital_social) || 0,
+      cnae: {
+        principal: {
+          codigo: response.data.estabelecimento.atividade_principal?.id,
+          descricao: response.data.estabelecimento.atividade_principal?.descricao
+        },
+        secundarias: response.data.estabelecimento.atividades_secundarias?.map(atividade => ({
+          codigo: atividade.id,
+          descricao: atividade.descricao
+        })) || []
+      },
+      address: {
+        street: response.data.estabelecimento.logradouro,
+        number: response.data.estabelecimento.numero,
+        complement: response.data.estabelecimento.complemento,
+        neighborhood: response.data.estabelecimento.bairro,
+        city: response.data.estabelecimento.cidade?.nome,
+        state: response.data.estabelecimento.estado?.sigla,
+        zipCode: response.data.estabelecimento.cep,
+        country: 'Brasil'
+      },
+      contact: {
+        phone: response.data.estabelecimento.ddd1 && response.data.estabelecimento.telefone1 
+          ? `${response.data.estabelecimento.ddd1}${response.data.estabelecimento.telefone1}` 
+          : null,
+        email: response.data.estabelecimento.email
+      },
+      naturezaJuridica: response.data.natureza_juridica?.descricao,
+      porte: mapPorte(response.data.porte?.descricao),
+      dataSource: 'CNPJ_WS',
+      lastUpdated: new Date()
+    };
+    
+    return {
+      success: true,
+      data: companyData,
+      source: 'CNPJ_WS'
+    };
+    
+  } catch (error) {
+    console.error('Erro na consulta CNPJ.WS:', error);
+    throw new Error(`CNPJ.WS: ${error.response?.data?.message || error.message || 'Erro na consulta do CNPJ'}`);
   }
 };
 
@@ -211,21 +286,43 @@ export const consultCNPJBrasilAPI = async (cnpj) => {
 export const consultCNPJWithFallback = async (cnpj) => {
   const errors = [];
   
-  // Tentar ReceitaWS primeiro
-  try {
-    return await consultCNPJReceitaWS(cnpj);
-  } catch (error) {
-    errors.push({ service: 'ReceitaWS', error: error.message });
-  }
+  console.log(`🔍 Iniciando consulta CNPJ: ${cnpj}`);
   
-  // Fallback para BrasilAPI
+  // Tentar BrasilAPI primeiro (mais confiável)
   try {
-    return await consultCNPJBrasilAPI(cnpj);
+    console.log('📡 Tentando BrasilAPI...');
+    const result = await consultCNPJBrasilAPI(cnpj);
+    console.log('✅ BrasilAPI funcionou!');
+    return result;
   } catch (error) {
+    console.log('❌ BrasilAPI falhou:', error.message);
     errors.push({ service: 'BrasilAPI', error: error.message });
   }
   
+  // Fallback 1: CNPJ.WS (Gratuita)
+  try {
+    console.log('📡 Tentando CNPJ.WS...');
+    const result = await consultCNPJWS(cnpj);
+    console.log('✅ CNPJ.WS funcionou!');
+    return result;
+  } catch (error) {
+    console.log('❌ CNPJ.WS falhou:', error.message);
+    errors.push({ service: 'CNPJ.WS', error: error.message });
+  }
+  
+  // Fallback 2: ReceitaWS (pode estar com problemas)
+  try {
+    console.log('📡 Tentando ReceitaWS...');
+    const result = await consultCNPJReceitaWS(cnpj);
+    console.log('✅ ReceitaWS funcionou!');
+    return result;
+  } catch (error) {
+    console.log('❌ ReceitaWS falhou:', error.message);
+    errors.push({ service: 'ReceitaWS', error: error.message });
+  }
+  
   // Se todas as APIs falharam
+  console.log('❌ Todas as APIs falharam');
   throw new Error(`Falha em todas as APIs de consulta: ${errors.map(e => `${e.service}: ${e.error}`).join('; ')}`);
 };
 
@@ -276,5 +373,6 @@ export default {
   validateCNPJ,
   consultCNPJReceitaWS,
   consultCNPJBrasilAPI,
+  consultCNPJWS,
   consultCNPJWithFallback
 };

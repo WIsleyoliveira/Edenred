@@ -76,6 +76,10 @@ class AdaptadorBancoDados {
     return await this.adaptadorAtual.buscarConsultasPorUsuario(idUsuario, filtros);
   }
   
+  async buscarConsultaPorId(id) {
+    return await this.adaptadorAtual.buscarConsultaPorId(id);
+  }
+  
   async atualizarConsulta(id, dadosAtualizacao) {
     return await this.adaptadorAtual.atualizarConsulta(id, dadosAtualizacao);
   }
