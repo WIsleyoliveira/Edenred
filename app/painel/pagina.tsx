@@ -23,7 +23,7 @@ export default function PaginaPainel() {
   useEffect(() => {
     const buscarDados = async () => {
       try {
-        const resposta = await fetch('/api/dashboard')
+        const resposta = await fetch('/api/painel')
         const dados = await resposta.json()
         setServicos(dados.servicos)
         setEstatisticas(dados.estatisticas)

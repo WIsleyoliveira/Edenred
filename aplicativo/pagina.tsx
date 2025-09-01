@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card"
+import { Label } from "@components/ui/label"
 import { Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -43,7 +43,7 @@ export default function PaginaLogin() {
       const dados = await resposta.json()
 
       if (resposta.ok) {
-        router.push("/dashboard")
+        router.push("/painel")
       } else {
         alert(dados.erro || "Erro no login")
       }
