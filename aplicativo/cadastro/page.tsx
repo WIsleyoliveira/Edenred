@@ -2,15 +2,15 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card"
+import { Label } from "@components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
+import { Checkbox } from "@components/ui/checkbox"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { EdenredHeader } from "@/components/edenred-header"
+import { EdenredHeader } from "@components/edenred-header"
 
 export default function PaginaCadastro() {
   const router = useRouter()

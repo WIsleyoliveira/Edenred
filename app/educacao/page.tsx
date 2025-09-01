@@ -1,8 +1,8 @@
 "use client"
 
-import { EdenredHeader } from "@/components/edenred-header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { EdenredHeader } from "@components/edenred-header"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card"
+import { Button } from "@components/ui/button"
 import { BookOpen, Users, Award, TrendingUp } from "lucide-react"
 
 export default function EducacaoPage() {

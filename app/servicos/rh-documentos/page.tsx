@@ -1,10 +1,10 @@
 "use client"
 
-import { EdenredHeader } from "@/components/edenred-header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { EdenredHeader } from "@components/edenred-header"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Badge } from "@components/ui/badge"
 import { FileText, Upload, Download, Search, Filter, ArrowLeft, Eye } from "lucide-react"
 import Link from "next/link"
 

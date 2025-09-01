@@ -8,53 +8,32 @@ import { Label } from "@components/ui/label"
 import { Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-export default function PaginaLogin() {
-  const [telefone, setTelefone] = useState("")
+export default function LoginPage() {
+  const [phone, setPhone] = useState("")
   const router = useRouter()
 
-  const tratarLogin = async () => {
-    if (!telefone.trim()) {
+  const handleLogin = () => {
+    if (!phone.trim()) {
       alert("Por favor, digite seu email, telefone ou Skype")
       return
     }
 
     // Simular validação
-    if (telefone.length < 3) {
+    if (phone.length < 3) {
       alert("Por favor, digite um email, telefone ou Skype válido")
       return
     }
 
-    // Simular carregamento
-    const botao = document.querySelector("button")
-    if (botao) {
-      botao.textContent = "Entrando..."
-      botao.disabled = true
+    // Simular loading
+    const button = document.querySelector("button")
+    if (button) {
+      button.textContent = "Entrando..."
+      button.disabled = true
     }
 
-    try {
-      const resposta = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ telefone }),
-      })
-
-      const dados = await resposta.json()
-
-      if (resposta.ok) {
-        router.push("/painel")
-      } else {
-        alert(dados.erro || "Erro no login")
-      }
-    } catch (erro) {
-      alert("Erro de conexão")
-    } finally {
-      if (botao) {
-        botao.textContent = "Avançar"
-        botao.disabled = false
-      }
-    }
+    setTimeout(() => {
+      router.push("/dashboard")
+    }, 1000)
   }
 
   return (
@@ -78,15 +57,15 @@ export default function PaginaLogin() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="telefone" className="text-sm font-medium text-gray-700">
+            <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
               Email, telefone ou Skype
             </Label>
             <Input
-              id="telefone"
+              id="phone"
               type="text"
               placeholder=""
-              value={telefone}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTelefone(e.target.value)}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full border-gray-300"
             />
           </div>
@@ -97,7 +76,7 @@ export default function PaginaLogin() {
             </a>
           </div>
 
-          <Button onClick={tratarLogin} className="w-full hover:bg-blue-700 text-white bg-red-600" size="lg">
+          <Button onClick={handleLogin} className="w-full hover:bg-blue-700 text-white bg-red-600" size="lg">
             Avançar
           </Button>
 

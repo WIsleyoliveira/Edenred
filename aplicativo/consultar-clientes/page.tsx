@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { EdenredHeader } from "@/components/edenred-header"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { EdenredHeader } from "@components/edenred-header"
+import { DashboardSidebar } from "@components/dashboard-sidebar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
+import { Badge } from "@components/ui/badge"
 import { Search, Users, Building, Phone, Mail, MapPin, Calendar, CreditCard, Filter, Download, Eye } from "lucide-react"
 
 export default function ConsultarClientesPage() {

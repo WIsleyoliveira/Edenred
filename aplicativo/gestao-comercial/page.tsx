@@ -1,10 +1,10 @@
 "use client"
 
-import { EdenredHeader } from "@/components/edenred-header"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { EdenredHeader } from "@components/edenred-header"
+import { DashboardSidebar } from "@components/dashboard-sidebar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card"
+import { Button } from "@components/ui/button"
+import { Badge } from "@components/ui/badge"
 import { TrendingUp, Users, Target, DollarSign, Calendar, FileText, Phone, Mail, Building } from "lucide-react"
 
 export default function GestaoComercialPage() {

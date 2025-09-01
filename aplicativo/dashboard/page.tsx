@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card"
+import { Button } from "@components/ui/button"
+import { Badge } from "@components/ui/badge"
 import { FileText, CreditCard, Users, BarChart3, Bell, User, ChevronRight, Download } from "lucide-react"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { DashboardSidebar } from "@components/dashboard-sidebar"
 import Link from "next/link"
 
 export default function PaginaPainel() {

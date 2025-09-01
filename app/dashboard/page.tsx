@@ -8,12 +8,12 @@ import { FileText, CreditCard, Users, BarChart3, Bell, User, ChevronRight, Downl
 import { DashboardSidebar } from "@components/dashboard-sidebar"
 import Link from "next/link"
 
-export default function PaginaPainel() {
-  const [servicos, setServicos] = useState<any[]>([])
-  const [estatisticas, setEstatisticas] = useState<any[]>([])
-  const [carregando, setCarregando] = useState(true)
+export default function DashboardPage() {
+  const [services, setServices] = useState<any[]>([])
+  const [stats, setStats] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const mapaIcones = {
+  const iconMap = {
     CreditCard: CreditCard,
     FileText: FileText,
     Users: Users,
@@ -21,24 +21,24 @@ export default function PaginaPainel() {
   }
 
   useEffect(() => {
-    const buscarDados = async () => {
+    const fetchData = async () => {
       try {
-        const resposta = await fetch('/api/dashboard')
-        const dados = await resposta.json()
-        setServicos(dados.servicos)
-        setEstatisticas(dados.estatisticas)
-      } catch (erro) {
-        console.error('Erro ao buscar dados do painel:', erro)
+        const response = await fetch('/api/dashboard')
+        const data = await response.json()
+        setServices(data.services)
+        setStats(data.stats)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
       } finally {
-        setCarregando(false)
+        setLoading(false)
       }
     }
 
-    buscarDados()
+    fetchData()
   }, [])
 
-  if (carregando) {
-    return <div>Carregando...</div>
+  if (loading) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -70,20 +70,20 @@ export default function PaginaPainel() {
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Grade de Serviços */}
+          {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {servicos.map((servico, indice) => (
-              <Link key={indice} href={servico.href}>
+            {services.map((service, index) => (
+              <Link key={index} href={service.href}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer bg-white border-gray-200">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${servico.cor}`}>
-                        {React.createElement(mapaIcones[servico.icone as keyof typeof mapaIcones] || FileText, { className: "w-6 h-6" })}
+                      <div className={`p-2 rounded-lg ${service.color}`}>
+                        {React.createElement(iconMap[service.icon as keyof typeof iconMap] || FileText, { className: "w-6 h-6" })}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-sm text-gray-900">{servico.titulo}</h3>
+                        <h3 className="font-semibold text-sm text-gray-900">{service.title}</h3>
                         <Badge variant="secondary" className="text-xs mt-1 bg-gray-100 text-gray-600">
-                          {servico.subtitulo}
+                          {service.subtitle}
                         </Badge>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -94,16 +94,16 @@ export default function PaginaPainel() {
             ))}
           </div>
 
-          {/* Cartões de Estatísticas */}
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {estatisticas.map((estatistica, indice) => (
-              <Card key={indice} className="bg-white border-gray-200">
+            {stats.map((stat, index) => (
+              <Card key={index} className="bg-white border-gray-200">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${estatistica.cor}`} />
+                    <div className={`w-3 h-3 rounded-full ${stat.color}`} />
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">{estatistica.valor}</p>
-                      <p className="text-sm text-gray-600">{estatistica.rotulo}</p>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-sm text-gray-600">{stat.label}</p>
                     </div>
                   </div>
                 </CardContent>
